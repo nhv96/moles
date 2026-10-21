@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Audio + Mic Test</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 0; padding: 16px; background: #111; color: #eee; }
+  button { font-size: 20px; padding: 14px 20px; width: 100%; border-radius: 10px; border: 0; background: #3b82f6; color: #fff; }
+  #barWrap { height: 28px; background: #333; border-radius: 6px; margin: 16px 0 6px; overflow: hidden; }
+  #bar { height: 100%; width: 0; background: #22c55e; }
+  #status { font-size: 15px; margin-bottom: 10px; line-height: 1.5; }
+  pre { font-size: 12px; white-space: pre-wrap; background: #000; padding: 8px; border-radius: 6px; max-height: 50vh; overflow-y: auto; }
+</style>
+</head>
+<body>
+<button id="start">Start test</button>
+<label style="display:block;margin-top:10px;font-size:15px"><input type="checkbox" id="micFirst"> Ask for mic permission first, then start the beeps</label>
+<label style="display:block;margin-top:6px;font-size:15px"><input type="checkbox" id="rawMic"> Turn off echo cancellation, noise suppression and auto gain on the mic</label>
+<div id="barWrap"><div id="bar"></div></div>
+<div id="status">Not started</div>
+<div style="margin-bottom:10px">Speech threshold: <b id="thv"></b>
+  <input type="range" id="th" min="1" max="50" value="8" style="width:100%">
+  <small>Lower = more sensitive. Adjust until the counter resets when you speak, but not on background noise.</small>
+</div>
+<pre id="log"></pre>
+
+<script>
+const $ = id => document.getElementById(id);
+const logEl = $('log');
+const t0 = Date.now();
+function log(msg) {
+  const s = ((Date.now() - t0) / 1000).toFixed(1).padStart(6);
+  logEl.textContent = s + 's  ' + msg + '\n' + logEl.textContent;
+}
+
+function micConstraints() {
+  const off = $('rawMic').checked;
+  return { audio: { echoCancellation: !off, noiseSuppression: !off, autoGainControl: !off } };
+}
+
+// Generates a WAV: short beep then silence, so we can hear if playback continues while locked.
+function makeWavUrl() {
+  const rate = 22050, beepSec = 0.3, totalSec = 3;
+  const n = rate * totalSec;
+  const buf = new ArrayBuffer(44 + n * 2);
+  const v = new DataView(buf);
+  const w = (o, s) => [...s].forEach((c, i) => v.setUint8(o + i, c.charCodeAt(0)));
+  w(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); w(8, 'WAVE'); w(12, 'fmt ');
+  v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, rate, true); v.setUint32(28, rate * 2, true);
+  v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, 'data'); v.setUint32(40, n * 2, true);
+  for (let i = 0; i < n; i++) {
+    const t = i / rate;
+    const s = t < beepSec ? Math.sin(2 * Math.PI * 660 * t) * 0.3 : 0;
+    v.setInt16(44 + i * 2, s * 32767, true);
+  }
+  return URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
+}
+
+let lastTick = Date.now();
+let silentSince = Date.now();
+let peak = 0, wasSpeaking = false;
+let earlyStream = null;
+let lastAudioTime = -1, lastProgressAt = Date.now(), stallLogged = false;
+let wakeLock = null;
+
+async function requestWakeLock() {
+  try {
+    wakeLock = await navigator.wakeLock.request('screen');
+    log('wake lock: granted');
+    wakeLock.addEventListener('release', () => log('wake lock: released'));
+  } catch (e) { log('wake lock: FAILED ' + e.message); }
+}
+
+$('start').onclick = async () => {
+  $('start').disabled = true;
+  log('UA: ' + navigator.userAgent);
+  log('audioSession API: ' + (navigator.audioSession ? 'yes, type=' + navigator.audioSession.type : 'not available'));
+
+  if ($('micFirst').checked) {
+    try {
+      earlyStream = await navigator.mediaDevices.getUserMedia({
+        audio: micConstraints().audio
+      });
+      log('mic permission acquired BEFORE audio start');
+    } catch (e) { log('early mic FAILED ' + e.name + ' ' + e.message); }
+  }
+
+  // 1. Audio playback
+  const audio = new Audio(makeWavUrl());
+  audio.loop = true;
+  ['play', 'pause', 'ended', 'stalled', 'waiting', 'error'].forEach(ev =>
+    audio.addEventListener(ev, () => log('AUDIO EVENT: ' + ev + ' (paused=' + audio.paused +
+      (navigator.audioSession ? ', session=' + navigator.audioSession.type : '') + ')')));
+  try { await audio.play(); log('audio playback: started'); }
+  catch (e) { log('audio playback: FAILED ' + e.message); }
+
+  // 2. Media Session (headphone buttons)
+  if ('mediaSession' in navigator) {
+    navigator.mediaSession.metadata = new MediaMetadata({ title: 'Lesson test', artist: 'Prototype' });
+    for (const a of ['play', 'pause', 'nexttrack', 'previoustrack']) {
+      try {
+        navigator.mediaSession.setActionHandler(a, () => {
+          log('HEADPHONE BUTTON: ' + a);
+          if (a === 'pause' || a === 'play') { if (audio.paused) audio.play(); } // keep playing
+        });
+      } catch (e) { log('mediaSession ' + a + ' unsupported'); }
+    }
+    log('media session: handlers set');
+  } else log('media session: not supported');
+
+  // 3. Wake lock
+  if ('wakeLock' in navigator) requestWakeLock(); else log('wake lock: not supported');
+
+  // 4. Microphone level
+  try {
+    const stream = earlyStream || await navigator.mediaDevices.getUserMedia({
+      audio: micConstraints().audio
+    });
+    const track = stream.getAudioTracks()[0];
+    log('mic: granted (' + track.label + ')');
+    const ms = track.getSettings();
+    log('mic settings: echoCancellation=' + ms.echoCancellation + ', noiseSuppression=' + ms.noiseSuppression + ', autoGainControl=' + ms.autoGainControl);
+    track.onmute = () => log('MIC TRACK MUTED');
+    track.onunmute = () => log('mic track unmuted');
+    track.onended = () => log('MIC TRACK ENDED');
+
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    ctx.onstatechange = () => log('audioContext: ' + ctx.state);
+    const src = ctx.createMediaStreamSource(stream);
+    const analyser = ctx.createAnalyser();
+    analyser.fftSize = 1024;
+    src.connect(analyser);
+    const data = new Float32Array(analyser.fftSize);
+
+    setInterval(() => {
+      const now = Date.now();
+      const gap = now - lastTick;
+      if (gap > 1500) log('TICK GAP ' + (gap / 1000).toFixed(1) + 's (page was throttled/suspended)');
+      lastTick = now;
+
+      // Watchdog: the page can think audio is playing while no sound comes out.
+      if (!audio.paused) {
+        if (audio.currentTime !== lastAudioTime) {
+          lastAudioTime = audio.currentTime;
+          lastProgressAt = now;
+          if (stallLogged) { log('playback progressing again'); stallLogged = false; }
+        } else if (!stallLogged && now - lastProgressAt > 2500) {
+          stallLogged = true;
+          log('PLAYBACK STALLED: currentTime stuck at ' + lastAudioTime.toFixed(2) + ' while paused=false. Trying to restart.');
+          audio.pause();
+          audio.currentTime = 0;
+          audio.play().then(() => log('recovery: play() ok')).catch(e => log('recovery: play() FAILED ' + e.name));
+        }
+      }
+
+      analyser.getFloatTimeDomainData(data);
+      let sum = 0;
+      for (const x of data) sum += x * x;
+      const rms = Math.sqrt(sum / data.length);
+      $('bar').style.width = Math.min(100, rms * 400) + '%';
+
+      const threshold = $('th').value / 1000;
+      $('thv').textContent = threshold.toFixed(3);
+      peak = Math.max(peak, rms);
+      const speaking = rms > threshold;
+      if (speaking) {
+        if (!wasSpeaking) log('speech START (level ' + rms.toFixed(3) + ')');
+        silentSince = now;
+        wasSpeaking = true;
+      } else if (wasSpeaking && now - silentSince > 1000) {
+        log('speech END');
+        wasSpeaking = false;
+      }
+      const silentFor = ((now - silentSince) / 1000).toFixed(1);
+      $('status').innerHTML =
+        'mic level: ' + rms.toFixed(3) + ' | peak: ' + peak.toFixed(3) + (speaking ? ' (SPEAKING)' : '') +
+        '<br>silent for: ' + silentFor + 's' +
+        '<br>audioContext: ' + ctx.state + ' | mic track: ' + track.readyState + (track.muted ? ' (muted)' : '');
+    }, 250);
+  } catch (e) { log('mic: FAILED ' + e.name + ' ' + e.message); }
+};
+
+document.addEventListener('visibilitychange', () => {
+  log('page visibility: ' + document.visibilityState);
+  if (document.visibilityState === 'visible' && wakeLock && wakeLock.released) requestWakeLock();
+});
+</script>
+</body>
+</html>
