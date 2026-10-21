@@ -1,0 +1,10 @@
+[project]
+name = "moles-content"
+version = "0.1.0"
+description = "Kokoro TTS test: generate French sentence audio and English meanings for review"
+requires-python = ">=3.10"
+dependencies = [
+    "kokoro>=0.9",
+    "soundfile",
+    "numpy",
+]

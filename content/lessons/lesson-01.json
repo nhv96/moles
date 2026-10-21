@@ -1,0 +1,19 @@
+{
+  "id": "lesson-01",
+  "title": "Introduce yourself (persona: Marc)",
+  "register": "vous",
+  "accent": "France French",
+  "sentences": [
+    { "id": "s01", "fr": "Bonjour, je m'appelle Marc, ravi de vous rencontrer.", "en": "Hello, my name is Marc, nice to meet you." },
+    { "id": "s02", "fr": "Je viens d'Italie, mais j'habite en Belgique maintenant.", "en": "I come from Italy, but I live in Belgium now." },
+    { "id": "s03", "fr": "Je suis ingénieur et je travaille dans une petite entreprise.", "en": "I'm an engineer and I work at a small company." },
+    { "id": "s04", "fr": "J'ai trente-cinq ans et j'habite avec ma famille.", "en": "I'm thirty-five years old and I live with my family." },
+    { "id": "s05", "fr": "Je parle italien, un peu anglais et un peu français.", "en": "I speak Italian, a little English and a little French." },
+    { "id": "s06", "fr": "J'apprends le français depuis six mois.", "en": "I've been learning French for six months." },
+    { "id": "s07", "fr": "Je ne parle pas encore très bien français.", "en": "I don't speak French very well yet." },
+    { "id": "s08", "fr": "Pendant mon temps libre, j'aime marcher et lire.", "en": "In my free time, I like to walk and read." },
+    { "id": "s09", "fr": "Pouvez-vous parler plus lentement, s'il vous plaît ?", "en": "Could you speak more slowly, please?" },
+    { "id": "s10", "fr": "Et vous, que faites-vous dans la vie ?", "en": "And you, what do you do for a living?" }
+  ],
+  "finished_cue": { "id": "end", "en": "The lesson is finished." }
+}
