@@ -1,50 +1,71 @@
 # content: Kokoro voice test
 
 Generates audio for lesson 1 ("introduce yourself", persona Marc) with the open Kokoro TTS model,
-so a native French speaker can judge whether the voice is good enough.
+so the right speed and mode can be chosen per sentence and a native French speaker can judge the result.
 
-**Status: untested.** The script was written without being able to install or run Kokoro, so expect
-to fix small things on the first run.
+**Status:** the model call itself is only tested by you. The rest (commands, silence trimming, phrase
+joining, manifest, review sheet) was checked here against a stand-in for Kokoro.
 
 ## Folder layout
 
 ```
 content/
-  lessons/lesson-01.json     source of truth: French text + English meaning per sentence
-  scripts/generate_kokoro.py generator
+  lessons/lesson-01.json     source of truth: text, meaning, per-sentence settings
+  scripts/generate_kokoro.py generator with two commands: sweep, build
   pyproject.toml             dependencies (managed with uv)
   .python-version            3.13
-  out/lesson-01/             generated (git-ignored): wav files + review.md
+  out/lesson-01/             sweep output (git-ignored): wav files + review.md
+  build/lesson-01/           build output (git-ignored): final wav files + manifest.json
 ```
 
-## Run it (Ubuntu)
+## Setup (Ubuntu)
 
 ```bash
-sudo apt install espeak-ng      # Kokoro uses it for French pronunciation rules (confirm on first run)
+sudo apt install espeak-ng
 cd content
-uv run scripts/generate_kokoro.py
+uv sync --managed-python
 ```
 
-The first run downloads the model (a few hundred MB). Then it writes, per sentence, French audio at
-speeds 0.8, 0.9 and 1.0 plus the English meaning, and a `review.md` sheet.
+## Workflow
 
-Options: `--speeds 0.85 0.95`, `--en-voice af_bella`, `--lesson lessons/other.json`.
+1. **Sweep:** make every sentence at several speeds, plus phrase-by-phrase versions where defined.
 
-## If `uv` cannot resolve Python 3.13
+   ```bash
+   uv run scripts/generate_kokoro.py sweep                      # speeds 0.6 0.7 0.8 0.9 1.0
+   uv run scripts/generate_kokoro.py sweep --speeds 0.8 0.9 1.0 # your own list
+   ```
 
-I could not check whether the current `kokoro` release supports Python 3.13. If `uv run` fails on the
-Python version, pin an older one and run again:
+   Files: `s01_fr_0.80.wav` (whole sentence), `s01_fr_0.80_ph.wav` (phrase by phrase), `s01_en.wav`.
 
-```bash
-cd content
-uv python pin 3.12
-uv run scripts/generate_kokoro.py
-```
+2. **Choose per sentence.** Listen, then edit `lessons/lesson-01.json`:
 
-## Review with your friend
+   ```json
+   { "id": "s02", "fr": "Je suis italien.", "en": "I am Italian.", "speed": 0.8 }
+   { "id": "s01", "fr": "...", "speed": 0.9, "mode": "phrases", "phrases": ["Bonjour,", "je m'appelle Marc."] }
+   ```
 
-1. Listen yourself first, for pace and clarity only.
-2. Send `out/lesson-01/` and `review.md` to your friend.
-3. They mark each file OK or write what is wrong, and say whether the French text itself is natural.
+   - `speed`: used for that sentence. Without it, `default_speed` applies (**0.9 is a placeholder**).
+   - `mode`: `"whole"` (default) or `"phrases"`.
+   - `phrases`: the pieces of the sentence. Joined, they must equal `fr` (the script checks this).
+   - `phrase_pause_ms` (lesson level): silence between pieces, 400 by default. Tune it by ear.
 
-Later, a Google Cloud TTS script can reuse the same lesson file and speeds so the two voices compare directly.
+3. **Build** the final files with the chosen settings:
+
+   ```bash
+   uv run scripts/generate_kokoro.py build
+   ```
+
+   It writes `s01_fr.wav`, `s01_en.wav`, ..., the "lesson finished" cue, and `manifest.json`
+   (order, text, speed, mode, file names, durations).
+
+Silence at the start and end of each French clip is trimmed (a short margin is kept), so the app can
+control all pauses. Pauses inside a sentence only exist in phrase mode.
+
+## The sentences
+
+The French text is my own and has not been reviewed by a native speaker. Please have your friend check
+the text (and a sample of the final audio) before relying on it.
+
+## Later
+
+A Google Cloud TTS script could reuse the same lesson file so the two voices compare directly.
