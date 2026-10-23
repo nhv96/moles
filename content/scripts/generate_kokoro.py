@@ -17,9 +17,11 @@ Per-sentence settings in the lesson file (all optional):
   "speed":   number, speed for this sentence (falls back to "default_speed")
   "mode":    "whole" (default) or "phrases"
   "phrases": list of text pieces; joined they must equal "fr" (ignoring spaces)
+  "phrase_pause_ms": silence between the phrases of this sentence, one number
+            (falls back to the lesson-level "phrase_pause_ms", then 400)
 
 Phrase mode makes each piece at the sentence speed, trims silence at the edges of each
-piece, and joins them with "phrase_pause_ms" of silence (lesson-level setting).
+piece, and joins them with "phrase_pause_ms" of silence.
 """
 
 from __future__ import annotations
@@ -63,6 +65,10 @@ def validate_sentence(s: dict) -> None:
 
 def sentence_speed(lesson: dict, s: dict) -> float:
     return float(s.get("speed", lesson.get("default_speed", 1.0)))
+
+
+def sentence_pause_ms(lesson: dict, s: dict) -> int:
+    return int(s.get("phrase_pause_ms", lesson.get("phrase_pause_ms", 400)))
 
 
 # --------------------------------------------------------------------------- audio
@@ -133,13 +139,13 @@ def cmd_sweep(args) -> None:
     lesson = load_lesson(args.lesson)
     out_dir = args.out / lesson["id"]
     out_dir.mkdir(parents=True, exist_ok=True)
-    pause_ms = int(lesson.get("phrase_pause_ms", 400))
     fr, en = make_pipelines()
 
     files: dict[str, list[tuple[str, float]]] = {}  # sentence id -> [(file name, seconds)]
 
     for s in lesson["sentences"]:
         files[s["id"]] = []
+        pause_ms = sentence_pause_ms(lesson, s)
         for speed in args.speeds:
             variants = [("whole", "")]
             if s.get("phrases"):
@@ -161,13 +167,13 @@ def cmd_build(args) -> None:
     lesson = load_lesson(args.lesson)
     out_dir = args.out / lesson["id"]
     out_dir.mkdir(parents=True, exist_ok=True)
-    pause_ms = int(lesson.get("phrase_pause_ms", 400))
     en_speed = float(lesson.get("en_speed", 1.0))
     fr, en = make_pipelines()
 
     items = []
     for s in lesson["sentences"]:
         speed = sentence_speed(lesson, s)
+        pause_ms = sentence_pause_ms(lesson, s)
         mode = s.get("mode", "whole")
         fr_name, en_name = f"{s['id']}_fr.wav", f"{s['id']}_en.wav"
         fr_seconds = write_wav(out_dir / fr_name, synth_french(fr, s, args.fr_voice, speed, mode, pause_ms))

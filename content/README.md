@@ -47,7 +47,8 @@ uv sync --managed-python
    - `speed`: used for that sentence. Without it, `default_speed` applies (**0.9 is a placeholder**).
    - `mode`: `"whole"` (default) or `"phrases"`.
    - `phrases`: the pieces of the sentence. Joined, they must equal `fr` (the script checks this).
-   - `phrase_pause_ms` (lesson level): silence between pieces, 400 by default. Tune it by ear.
+   - `phrase_pause_ms`: silence between the pieces, in milliseconds. Set it on a sentence to override the
+     lesson-level value (top of the file, 400 by default). One number per sentence. Tune it by ear.
 
 3. **Build** the final files with the chosen settings:
 
