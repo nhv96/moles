@@ -15,7 +15,8 @@ content/
   pyproject.toml             dependencies (managed with uv)
   .python-version            3.13
   out/lesson-01/             sweep output (git-ignored): wav files + review.md
-  build/lesson-01/           build output (git-ignored): final wav files + manifest.json
+  build/lesson-01/           build output (git-ignored): final m4a files + manifest.json
+  build-48/, build-64/ ...   bitrate candidates made with --out (git-ignored)
 ```
 
 ## Setup (Ubuntu)
@@ -56,8 +57,14 @@ uv sync --managed-python
    uv run scripts/generate_kokoro.py build
    ```
 
-   It writes `s01_fr.wav`, `s01_en.wav`, ..., the "lesson finished" cue, and `manifest.json`
-   (order, text, speed, mode, file names, durations).
+   It writes `s01_fr.m4a`, `s01_en.m4a`, ..., the "lesson finished" cue, and `manifest.json`
+   (order, text, speed, mode, file names, durations of the final m4a files). Needs `ffmpeg`.
+   Every clip is brought to the same loudness (-16 LUFS), 100 ms of silence is added at the start, peaks are limited to -3.5 dBFS, and the
+   result is encoded as mono AAC. To compare bitrates (default 96 kbps):
+
+   ```bash
+   uv run scripts/generate_kokoro.py build --bitrate 64 --out build-64
+   ```
 
 Silence at the start and end of each French clip is trimmed (a short margin is kept), so the app can
 control all pauses. Pauses inside a sentence only exist in phrase mode.

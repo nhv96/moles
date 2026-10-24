@@ -2,4 +2,5 @@
 out/
 out-*/
 build/
+build-*/
 __pycache__/

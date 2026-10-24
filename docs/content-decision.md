@@ -55,7 +55,7 @@ The source of truth for these values is `content/lessons/lesson-01.json`; this t
 ## Still open
 
 - Native speaker review of the French text and a sample of the audio.
-- Whether any clip has a tiny extra sound at its end (not yet checked).
+- Clip ends: checked by ear on 2026-10-25, no extra sound heard (s01_fr and s03_fr, which had a small gap near the end in the analysis, sound good).
 - Google Cloud TTS: deliberately not tried; Kokoro is good enough for now.
-- Audio bitrate and the build step: AAC/M4A with `ffmpeg loudnorm` is decided (2026-10-24). `build` still writes uncompressed WAV (24 kHz) with no loudness matching; adding the encoding and choosing the bitrate is task 1 of `docs/prototype-plan.md`.
+- Audio format (decided 2026-10-25): `build` loudness-matches every clip to -16 LUFS, adds 100 ms of silence at the start of each clip (some players clip the first moment of repeated M4A playback), limits peaks to -3.5 dBFS, and encodes mono AAC/M4A at **96 kbps**, chosen by listening against 48 and 64 kbps. It uses a measured gain plus a peak limiter instead of plain `ffmpeg loudnorm`, which left peaky clips up to 5 LU too quiet.
 - Using the built files and `manifest.json` in the web-app prototype.
