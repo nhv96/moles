@@ -66,7 +66,7 @@ Replaying the French after the meaning (revisit after real use), build-up practi
 ### Open
 - How to recognize "repeat" and "next" in the browser, and how reliable it is on iPhone.
 - If the web app is published to other users or hits limits, whether to wrap it as a native app later (for example with Capacitor, built in the cloud).
-- Final audio format and loudness. `build` currently writes uncompressed WAV files (24 kHz) with no loudness matching. The app needs a compact format that plays on iPhone Safari (MP3 or AAC/M4A) and a consistent volume across files.
+- Audio bitrate and the build step. Decided on 2026-10-24: AAC/M4A, with loudness normalized by `ffmpeg loudnorm`. `build` still writes uncompressed WAV files (24 kHz) with no loudness matching until task 1 of `docs/prototype-plan.md` is done, and the bitrate is still to be chosen.
 - Whether the content generator stays in Python or gets a Go wrapper later. Kokoro is a Python library, and the earlier plan for Go assumed fetching and cutting audio, which is no longer needed.
 - Whether to add more voices or a second TTS provider (for example Google Cloud TTS, deliberately not tried so far) if Kokoro's single French voice becomes a limit.
 
@@ -105,5 +105,5 @@ A single test page was used. It beeped every 3 seconds, showed a mic level, requ
 The content source is settled (see `docs/content-decision.md`). What remains before the app can use lesson 1:
 
 1. Native speaker review of the French text and a sample of the audio.
-2. Decide the final audio format and loudness (see Open in section 3).
+2. Add `ffmpeg loudnorm` and AAC/M4A encoding to `build` and choose the bitrate (format decided, see `docs/prototype-plan.md`, task 1).
 3. Load `manifest.json` and the audio files in the web prototype.

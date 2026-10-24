@@ -57,5 +57,5 @@ The source of truth for these values is `content/lessons/lesson-01.json`; this t
 - Native speaker review of the French text and a sample of the audio.
 - Whether any clip has a tiny extra sound at its end (not yet checked).
 - Google Cloud TTS: deliberately not tried; Kokoro is good enough for now.
-- Final audio format and loudness: `build` writes uncompressed WAV (24 kHz) with no loudness matching; the app needs MP3 or AAC/M4A and a consistent volume.
+- Audio bitrate and the build step: AAC/M4A with `ffmpeg loudnorm` is decided (2026-10-24). `build` still writes uncompressed WAV (24 kHz) with no loudness matching; adding the encoding and choosing the bitrate is task 1 of `docs/prototype-plan.md`.
 - Using the built files and `manifest.json` in the web-app prototype.
