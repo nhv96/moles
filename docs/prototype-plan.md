@@ -27,13 +27,14 @@ Control during the lesson is by headphone buttons. Voice commands ("repeat", "ne
 | Speech threshold | Measure the background noise at session start and set the threshold relative to it. A proper voice activity detector comes later. | **Decided** (promoted from Proposed) |
 | Silent track between sentences | Keep a silent audio track playing to keep the page alive with the screen locked. Untested, so it is verified in the prototype. | **Decided** (promoted from Proposed) |
 | Loudness | Normalize with `ffmpeg loudnorm` in the `build` step. | **Decided** |
+| Compressed audio format | AAC/M4A. The bitrate is chosen in task 1. | **Decided** |
+| Headphone button mapping | Previous = repeat, next = next, play/pause = pause and resume. Confirmed by task 0.1 once it shows which buttons reach the page. | **Decided** |
 | Build tooling | Vite with vanilla TypeScript, no UI framework. | **Decided** |
 | Hosting | GitHub Pages first. | **Decided** |
 
 ### Still open
 
-- **Compressed audio format:** AAC/M4A or MP3. Both play on iPhone Safari. The `loudnorm` decision is made; the container and bitrate are not (task 1).
-- **Headphone button mapping** for "repeat" and "next". A natural mapping would be previous = repeat and next = next, with play/pause kept as pause and resume, but it is not chosen until task 0.1 shows which buttons reach the page.
+- **AAC bitrate.** Chosen in task 1 by listening.
 - **Volume buttons.** They are normally handled by iOS and may never reach the page. Confirm in task 0.1.
 
 ## 3. Tasks
@@ -42,17 +43,17 @@ Each task has a "done when" line, so progress can be checked without guessing.
 
 ### Task 0: close the open tests
 
-**0.1 Headphone button test (about 10 minutes).** Extend `mic-test.html`, or write a small new page, to register Media Session actions (`play`, `pause`, `nexttrack`, `previoustrack`) and log each press, with the screen locked and while audio plays.
-Done when: it is known which of the four actions arrive on the user's headphones, and the button mapping above is fixed.
+**0.1 Headphone button test (about 10 minutes).** `headphone-test.html` (next to `mic-test.html`) registers the Media Session actions (`play`, `pause`, `nexttrack`, `previoustrack`, plus seek and stop) and logs each press, with the screen locked, audio playing and the mic open as in the app. It is run twice: once with the audio kept playing on a pause press (as the silent track would be), and once with a pause press really pausing the audio.
+Done when: it is known which actions arrive on the user's headphones, whether play/pause can work as a toggle while the silent track keeps playing, and the button mapping in section 2 is confirmed or changed to fit the buttons that arrive.
 
 ### Task 1: finish the content pipeline
 
 Work in `content/scripts/generate_kokoro.py`.
 
-- Add encoding to the compact format (see Still open) after the `loudnorm` step, so all clips have a consistent volume.
+- Add loudness normalization (`ffmpeg loudnorm`), then encoding to AAC/M4A, so all clips have a consistent volume and play on iPhone Safari.
 - Add each clip's duration to `manifest.json`.
 - Listen to the end of every clip for the tiny extra sound (still open in `docs/content-decision.md`).
-- Update `docs/content-decision.md` and `docs/app-spec.md` once the format is chosen.
+- Update `docs/content-decision.md` and `docs/app-spec.md` with the final bitrate.
 
 Done when: the manifest and compact audio files load and play on iPhone Safari at a consistent volume, and the clip ends are checked.
 
