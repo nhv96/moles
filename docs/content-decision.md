@@ -57,5 +57,5 @@ The source of truth for these values is `content/lessons/lesson-01.json`; this t
 - Native speaker review of the French text and a sample of the audio.
 - Whether any clip has a tiny extra sound at its end (not yet checked).
 - Google Cloud TTS: deliberately not tried; Kokoro is good enough for now.
-- `docs/app-spec.md` still says 6 to 10 words per sentence.
+- Final audio format and loudness: `build` writes uncompressed WAV (24 kHz) with no loudness matching; the app needs MP3 or AAC/M4A and a consistent volume.
 - Using the built files and `manifest.json` in the web-app prototype.

@@ -1,6 +1,6 @@
 # Hands-Free French Listening App: Agreed Scope (MVP v1)
 
-Status as of 2026-10-20. Items are marked **Decided**, **Proposed** (suggested, not yet confirmed) or **Open**.
+Status as of 2026-10-24. Items are marked **Decided**, **Proposed** (suggested, not yet confirmed) or **Open**.
 
 ## 1. Idea
 
@@ -13,10 +13,12 @@ A mobile-friendly app for learning spoken French by *shadowing*: you hear a sent
 ## 2. Product features (MVP v1)
 
 ### Content (Decided)
-- One lesson, in French, with English meanings. First lesson: introducing yourself.
-- About 10 sentences, 6 to 10 words each, about 5 seconds of audio each.
+- One lesson, in French, with English meanings. First lesson: introducing yourself, with a made-up persona (Marc), polite "vous", France French (not Québécois).
+- 8 sentences, 3 to 5 words each. The first draft (about 10 sentences of 6 to 10 words, about 5 seconds each) was too hard for a beginner to follow and repeat by shadowing, so sentences are short. New words are welcome: repeating them clearly helps remember how they sound.
 - Sentences always play in the same order. No daily refresh and no spaced repetition yet.
-- The meaning is spoken in English (the user's chosen language), at a steady pace, about 5 seconds long, with no "it means..." prefix.
+- The French audio is generated speech (Kokoro, see section 3). Speed, phrase breaks and pause length are set per sentence and chosen by listening. No human recordings for now.
+- The meaning is spoken in English (the user's chosen language), at a steady pace, with no "it means..." prefix. The earlier target of about 5 seconds assumed longer sentences; with short sentences the meanings are shorter. **To be confirmed.**
+- The lesson text and settings are in `content/lessons/lesson-01.json`. The reasoning is in `docs/content-decision.md`.
 
 ### Per-sentence loop (Decided)
 1. The French sentence plays.
@@ -42,7 +44,7 @@ Visible in development mode only. It lets you tweak values live without rebuildi
 No scores, no right or wrong, no streaks, no progress tracking. You can start a new lesson without finishing the current one.
 
 ### Deliberately out of scope for now
-Replaying the French after the meaning (revisit after real use), daily refresh, spaced repetition, Swedish, multiple lessons, publishing to other users.
+Replaying the French after the meaning (revisit after real use), build-up practice (playing the end of a sentence, then the whole sentence, which would need cutting audio into pieces), daily refresh, spaced repetition, Swedish, multiple lessons, publishing to other users.
 
 ## 3. Tech stack
 
@@ -50,7 +52,8 @@ Replaying the French after the meaning (revisit after real use), daily refresh, 
 - **Web app (PWA)** opened on the iPhone, with no native app for the MVP. Reasons: you develop on Linux and have no Mac, and you have never built a mobile app.
 - **TypeScript** for the app (you have used it before).
 - **Static hosting over HTTPS.** HTTPS is required for microphone access on iPhone. Options: GitHub Pages, Cloudflare Pages or Netlify, or a temporary tunnel (`cloudflared`) during development.
-- **Go** for the content pipeline (fetching sentences, cutting audio, generating lesson files).
+- **Lesson content:** the sentences are written for the app, and the audio is generated with **Kokoro** (open text-to-speech model, Apache 2.0): French voice `ff_siwis`, English voice `af_heart`. A Python script (`content/scripts/generate_kokoro.py`, managed with `uv`, Python 3.13) builds one French and one English audio file per sentence plus a `manifest.json`. Open corpora (Tatoeba, Common Voice, Lingua Libre) were rejected; the reasons are in `docs/content-decision.md`.
+- **Go for the content pipeline** (fetching sentences, cutting audio, generating lesson files): *superseded for MVP v1.* The pipeline no longer fetches sentences or cuts audio, and the generator is the Python script above. See Open.
 
 ### Proposed
 - No UI framework to start, since the app has very little UI. Keep the lesson loop as a separate, testable state machine (playing, waiting, meaning, next) apart from the audio and mic code.
@@ -63,6 +66,9 @@ Replaying the French after the meaning (revisit after real use), daily refresh, 
 ### Open
 - How to recognize "repeat" and "next" in the browser, and how reliable it is on iPhone.
 - If the web app is published to other users or hits limits, whether to wrap it as a native app later (for example with Capacitor, built in the cloud).
+- Final audio format and loudness. `build` currently writes uncompressed WAV files (24 kHz) with no loudness matching. The app needs a compact format that plays on iPhone Safari (MP3 or AAC/M4A) and a consistent volume across files.
+- Whether the content generator stays in Python or gets a Go wrapper later. Kokoro is a Python library, and the earlier plan for Go assumed fetching and cutting audio, which is no longer needed.
+- Whether to add more voices or a second TTS provider (for example Google Cloud TTS, deliberately not tried so far) if Kokoro's single French voice becomes a limit.
 
 ## 4. Test results so far (iPhone, iOS 18.7, Safari and Opera Touch)
 
@@ -87,12 +93,17 @@ A single test page was used. It beeped every 3 seconds, showed a mic level, requ
 4. **Bluetooth headphones** often drop to phone-call audio quality while the mic is active. In the test, the beeps stayed clear on the user's Bluetooth headphones. Real speech and the meaning voice still need checking.
 5. **Interruptions** (phone call, Siri, notification) can stop audio and the mic. The app must detect this and resume cleanly. Untested.
 6. **Long sessions and battery.** Only 10 minutes have been tested. A 30-minute test, with a check of battery use, is still pending.
-7. **Content quality and pronunciation.** A beginner can't judge French pronunciation, so a native speaker should review a sample of the lesson audio.
+7. **Content quality and pronunciation.** A beginner can't judge French pronunciation. The French text (written by Claude) and a sample of the audio still need review by a native speaker; the user knows one who can help. Not done yet.
 8. **Apple Developer account.** Not needed for the web app. A native app would need a paid account (about $99/year, to be verified) and cloud builds.
 9. **Silent playback stall.** Playback can get stuck without any event if the mic permission dialog is open when the clip's loop point passes. Mic-first order and a watchdog address it (see section 3).
 10. **Which microphone iOS uses varies.** With the same headphones on, one run used the headset's mic and another the iPhone's built-in mic. The app must work with either and should log which one is active.
 11. **Playback volume** drops if the mic's voice processing is left on (see section 4). Keep it off.
+12. **Generated-voice limits.** Kokoro has one French voice, graded B- by its author. Slowing it stretches every sound equally, so at speeds of 0.8 and below short words dragged and the audio broke up, and at speeds around 0.85 a tiny extra sound ("ehh", "ck") can appear at the start of a clip or phrase. The per-sentence speeds in the lesson file (0.85 to 0.92) were chosen to avoid this; any new sentence needs the same listening check. Whether clips have a tiny extra sound at the end has not been checked.
 
 ## 6. Next step
 
-Settle the content source: where the French sentences and audio come from. See `handoff-content.md`.
+The content source is settled (see `docs/content-decision.md`). What remains before the app can use lesson 1:
+
+1. Native speaker review of the French text and a sample of the audio.
+2. Decide the final audio format and loudness (see Open in section 3).
+3. Load `manifest.json` and the audio files in the web prototype.
