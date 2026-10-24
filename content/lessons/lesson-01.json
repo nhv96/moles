@@ -11,6 +11,7 @@
       "id": "s01",
       "fr": "Bonjour, je m'appelle Marc.",
       "en": "Hello, my name is Marc.",
+      "mode": "phrases",
       "phrases": ["Bonjour,", "je m'appelle Marc."],
       "phrase_pause_ms": 100,
       "speed": 0.87
@@ -49,6 +50,7 @@
       "id": "s07",
       "fr": "Et vous, comment vous appelez-vous ?",
       "en": "And you, what is your name?",
+      "mode": "phrases",
       "phrases": ["Et vous,", "comment vous appelez-vous ?"],
       "phrase_pause_ms": 100,
       "speed": 0.9
@@ -57,6 +59,7 @@
       "id": "s08",
       "fr": "Plus lentement, s'il vous plaît.",
       "en": "More slowly, please.",
+      "mode": "phrases",
       "phrases": ["Plus lentement,", "s'il vous plaît."],
       "phrase_pause_ms": 100,
       "speed": 0.9
