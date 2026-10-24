@@ -29,15 +29,15 @@ Control during the lesson is by headphone buttons. Voice commands ("repeat", "ne
 | Loudness | Normalize with `ffmpeg loudnorm` in the `build` step. | **Decided** |
 | Compressed audio format | AAC/M4A. The bitrate is chosen in task 1. | **Decided** |
 | Headphone button mapping | Previous = repeat, next = next, play/pause = pause and resume (play/pause arrives as `pause` while the audio keeps playing, so the app keeps its own toggle). Confirmed by task 0.1 with the mic off. | **Decided** |
-| Priority: mic over buttons | The mic matters most. The buttons are a bonus, used where they reach the page (they may not with the mic open). Volume buttons are not used; volume quality is checked after the prototype. | **Decided** (2026-10-24) |
+| Priority: mic over buttons | The mic matters most. The buttons are a bonus, used where they reach the page (they do not with the mic open). Volume buttons are not used; volume quality is checked after the prototype. | **Decided** (2026-10-24) |
 | Build tooling | Vite with vanilla TypeScript, no UI framework. | **Decided** |
 | Hosting | GitHub Pages first. | **Decided** |
 
 ### Still open
 
 - **AAC bitrate.** Chosen in task 1 by listening.
-- **Why the buttons did not arrive with the mic open** in one run, while they did in an earlier test. Possibly the headset's own mic versus the iPhone's built-in mic. Not worked on now; task 5 logs the active input so the answer can come from normal runs.
-- **Browser.** All tests so far ran in Opera Touch. Whether the app can be added to the home screen from it is checked in task 2.
+- **Why the headphone buttons do not arrive with the mic open** (seen in both tests). Possibly the headset's own mic versus the iPhone's built-in mic. Not worked on now; task 5 logs the active input so the answer can come from normal runs.
+- **Home screen from Opera Touch.** All testing is done in Opera Touch only (Safari was used once). Whether the app can be added to the home screen from it is checked in task 2.
 - **Volume buttons.** They are normally handled by iOS and may never reach the page. Confirm in task 0.1.
 
 ## 3. Tasks
@@ -49,18 +49,18 @@ Each task has a "done when" line, so progress can be checked without guessing.
 **0.1 Headphone button test (about 10 minutes).** `headphone-test.html` (next to `mic-test.html`) registers the Media Session actions (`play`, `pause`, `nexttrack`, `previoustrack`, plus seek and stop) and logs each press, with the screen locked, audio playing and the mic open as in the app. It is run twice: once with the audio kept playing on a pause press (as the silent track would be), and once with a pause press really pausing the audio.
 Done when: it is known which actions arrive on the user's headphones, whether play/pause can work as a toggle while the silent track keeps playing, and the button mapping in section 2 is confirmed or changed to fit the buttons that arrive.
 
-**Result (2026-10-24), closed with one part skipped.** With the mic off: pause, next and previous arrive, locked and unlocked; play/pause always arrives as `pause`. Volume buttons never reach the page. With the mic on, nothing arrived in one run, which disagrees with an earlier test. Details are in `docs/app-spec.md` section 4. The run where a pause press really pauses the audio, and a deeper look at the mic-on case, are not done: the mic has priority over the buttons (section 2), so the buttons stay best effort.
+**Result (2026-10-24), closed with one part skipped.** With the mic off: pause, next and previous arrive, locked and unlocked; play/pause always arrives as `pause`. Volume buttons never reach the page. With the mic on, no headphone button arrived, the same as in the earlier test; only the on-screen controls worked. Details are in `docs/app-spec.md` section 4. The run where a pause press really pauses the audio, and a deeper look at the mic-on case, are not done: the mic has priority over the buttons (section 2), so the buttons stay best effort.
 
 ### Task 1: finish the content pipeline
 
 Work in `content/scripts/generate_kokoro.py`.
 
-- Add loudness normalization (`ffmpeg loudnorm`), then encoding to AAC/M4A, so all clips have a consistent volume and play on iPhone Safari.
+- Add loudness normalization (`ffmpeg loudnorm`), then encoding to AAC/M4A, so all clips have a consistent volume and play on iPhone (tested in Opera Touch).
 - Add each clip's duration to `manifest.json`.
 - Listen to the end of every clip for the tiny extra sound (still open in `docs/content-decision.md`).
 - Update `docs/content-decision.md` and `docs/app-spec.md` with the final bitrate.
 
-Done when: the manifest and compact audio files load and play on iPhone Safari at a consistent volume, and the clip ends are checked.
+Done when: the manifest and compact audio files load and play on iPhone in Opera Touch at a consistent volume, and the clip ends are checked.
 
 ### Task 2: project skeleton
 

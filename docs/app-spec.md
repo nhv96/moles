@@ -71,14 +71,16 @@ Replaying the French after the meaning (revisit after real use), build-up practi
 - Whether the content generator stays in Python or gets a Go wrapper later. Kokoro is a Python library, and the earlier plan for Go assumed fetching and cutting audio, which is no longer needed.
 - Whether to add more voices or a second TTS provider (for example Google Cloud TTS, deliberately not tried so far) if Kokoro's single French voice becomes a limit.
 
-## 4. Test results so far (iPhone, iOS 18.7, Safari and Opera Touch)
+## 4. Test results so far (iPhone, iOS 18.7, mostly Opera Touch)
+
+Safari was used once (the echo cancellation volume test below). All other tests ran in Opera Touch, and from 2026-10-24 all testing is done in Opera Touch only.
 
 A single test page was used. It beeped every 3 seconds, showed a mic level, requested a wake lock, and logged headphone button presses.
 
 | Question | Result |
 |---|---|
 | Mic and audio playback with the screen locked, phone in pocket | **Worked for about 10 minutes** (chores plus walking outside). The beeps never stopped, and speech was detected throughout. |
-| Headphone buttons (first page, mic active) | **Worked.** They arrived as play and pause events (next and previous were not tested). Which mic was active is not recorded. See the 2026-10-24 rows below, which do not fully agree. |
+| Headphone buttons (first page, mic active) | **Did not work.** Rechecked on 2026-10-24: only the on-screen controls (play, pause, next, previous) reached the page, not the headphone buttons. An earlier note here said the headphone buttons worked; that was wrong. Same result as the headphone button test below. |
 | Mic track muted or ended while locked | **No.** |
 | Fixed speech threshold | **Not reliable.** Speech levels ranged from 0.004 to 0.06 depending on the situation, so a fixed threshold won't hold up outdoors. |
 | Timer accuracy while the page is hidden | **Probably coarser** (events land on whole seconds, suggesting about a 1 second tick). This is an interpretation and was not confirmed. |
@@ -94,8 +96,8 @@ Page: `headphone-test.html` (branch `test/headphone-buttons`). iPhone, iOS 18.7,
 |---|---|
 | Buttons with the mic off, screen locked and unlocked | **Work.** Pause, next and previous reached the page, locked and unlocked. |
 | Play/pause button while the audio keeps playing | **Always arrives as `pause`, never `play`.** The app must treat it as its own toggle. A run where a pause press really pauses the audio is not done yet, so what arrives next is unknown. |
-| Buttons with the mic on (mic first, processing off) | **None arrived** in one run. The log of that run was not kept, so the active input is unknown. This disagrees with the first page above, where play and pause arrived with the mic active. |
-| Likely cause of the difference | **Not proven.** One idea: when the headset's own mic is used, Bluetooth switches to phone-call mode and the buttons act as call controls; with the iPhone's built-in mic it does not. Fits the "which microphone iOS uses varies" risk below. |
+| Buttons with the mic on (mic first, processing off) | **None of the headphone buttons arrived.** Only the on-screen and lock screen controls worked. This matches the first page above (rechecked), so the behavior is the same in both tests. The log of this run was not kept, so the active input is unknown. |
+| Why the buttons stop with the mic open | **Not proven.** One idea: when the headset's own mic is used, Bluetooth switches to phone-call mode and the buttons act as call controls. Not tested with the iPhone's built-in mic as the input. |
 | Volume buttons (headphones and phone sides) | **Volume changes, but nothing reaches the page.** Expected: iOS handles volume itself. Not usable for control. |
 | Setting the reported play state to paused while audio plays | **No effect.** The state stays `playing`; iOS goes by the real audio. |
 
@@ -113,7 +115,7 @@ Page: `headphone-test.html` (branch `test/headphone-buttons`). iPhone, iOS 18.7,
 10. **Which microphone iOS uses varies.** With the same headphones on, one run used the headset's mic and another the iPhone's built-in mic. The app must work with either and should log which one is active.
 11. **Playback volume** drops if the mic's voice processing is left on (see section 4). Keep it off.
 12. **Generated-voice limits.** Kokoro has one French voice, graded B- by its author. Slowing it stretches every sound equally, so at speeds of 0.8 and below short words dragged and the audio broke up, and at speeds around 0.85 a tiny extra sound ("ehh", "ck") can appear at the start of a clip or phrase. The per-sentence speeds in the lesson file (0.85 to 0.92) were chosen to avoid this; any new sentence needs the same listening check. Whether clips have a tiny extra sound at the end has not been checked.
-13. **Headphone buttons may not work while the mic is open.** Seen once on Bluetooth headphones (section 4). The cause is unknown, so the app treats the buttons as a bonus and logs which mic input is active. Also, all tests so far ran in Opera Touch, the browser the user uses; other iPhone browsers use the same engine, but this has not been compared.
+13. **Headphone buttons do not work while the mic is open.** Seen in both tests on Bluetooth headphones (section 4); they work with the mic off. The cause is unknown, so the app treats the buttons as a bonus and logs which mic input is active.
 
 ## 6. Next step
 
