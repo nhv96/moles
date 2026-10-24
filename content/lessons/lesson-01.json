@@ -11,24 +11,55 @@
       "id": "s01",
       "fr": "Bonjour, je m'appelle Marc.",
       "en": "Hello, my name is Marc.",
-      "phrases": ["Bonjour,", "je m'appelle Marc."]
+      "phrases": ["Bonjour,", "je m'appelle Marc."],
+      "phrase_pause_ms": 100,
+      "speed": 0.87
     },
-    { "id": "s02", "fr": "Je suis italien.", "en": "I am Italian." },
-    { "id": "s03", "fr": "J'habite en Belgique.", "en": "I live in Belgium." },
-    { "id": "s04", "fr": "Je travaille ici.", "en": "I work here." },
-    { "id": "s05", "fr": "Je parle un peu français.", "en": "I speak a little French." },
-    { "id": "s06", "fr": "J'apprends le français.", "en": "I am learning French." },
+    {
+      "id": "s02",
+      "fr": "Je suis italien.",
+      "en": "I am Italian.",
+      "speed": 0.9
+    },
+    {
+      "id": "s03",
+      "fr": "J'habite en Belgique.",
+      "en": "I live in Belgium.",
+      "speed": 0.87
+    },
+    {
+      "id": "s04",
+      "fr": "Je travaille ici.",
+      "en": "I work here.",
+      "speed": 0.9
+    },
+    {
+      "id": "s05",
+      "fr": "Je parle un peu français.",
+      "en": "I speak a little French.",
+      "speed": 0.85
+    },
+    {
+      "id": "s06",
+      "fr": "J'apprends le français.",
+      "en": "I am learning French.",
+      "speed": 0.85
+    },
     {
       "id": "s07",
       "fr": "Et vous, comment vous appelez-vous ?",
       "en": "And you, what is your name?",
-      "phrases": ["Et vous,", "comment vous appelez-vous ?"]
+      "phrases": ["Et vous,", "comment vous appelez-vous ?"],
+      "phrase_pause_ms": 100,
+      "speed": 0.9
     },
     {
       "id": "s08",
       "fr": "Plus lentement, s'il vous plaît.",
       "en": "More slowly, please.",
-      "phrases": ["Plus lentement,", "s'il vous plaît."]
+      "phrases": ["Plus lentement,", "s'il vous plaît."],
+      "phrase_pause_ms": 100,
+      "speed": 0.9
     }
   ],
   "finished_cue": { "id": "end", "en": "The lesson is finished." }
