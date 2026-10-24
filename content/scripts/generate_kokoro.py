@@ -9,9 +9,10 @@ Two commands (run from the content/ folder):
               uv run scripts/generate_kokoro.py sweep --speeds 0.7 0.8 0.9
 
   build   Final files. Uses the settings stored in the lesson file for each sentence
-          ("speed", "mode") and writes one French and one English file per sentence,
-          plus manifest.json.
+          ("speed", "mode") and writes one French and one English AAC/M4A file per sentence
+          (loudness-normalized with ffmpeg loudnorm), plus manifest.json.
               uv run scripts/generate_kokoro.py build
+              uv run scripts/generate_kokoro.py build --bitrate 48 --out build-48
 
 Per-sentence settings in the lesson file (all optional):
   "speed":   number, speed for this sentence (falls back to "default_speed")
@@ -28,6 +29,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import subprocess
+import tempfile
 from pathlib import Path
 
 import numpy as np
@@ -36,6 +39,10 @@ SAMPLE_RATE = 24000  # Kokoro output rate
 FR_VOICE = "ff_siwis"  # the only French voice in Kokoro
 EN_VOICE = "af_heart"  # a Kokoro English voice (change with --en-voice)
 EDGE_KEEP_MS = 40  # silence kept around a trimmed clip so it does not sound cut
+LOUDNESS_LUFS = -16.0  # integrated loudness target for every clip
+LEAD_IN_MS = 100  # silence added before every clip, so a player that loses the first moment loses no speech
+PEAK_CEILING_DB = -3.5  # limiter ceiling; leaves room for AAC encoding overshoot
+DEFAULT_BITRATE_KBPS = 96  # AAC bitrate, chosen by listening (2026-10-25)
 
 
 # --------------------------------------------------------------------------- lesson file
@@ -125,6 +132,37 @@ def write_wav(path: Path, audio: np.ndarray) -> float:
     return len(audio) / SAMPLE_RATE
 
 
+def run_ffmpeg(*args: str) -> str:
+    result = subprocess.run(["ffmpeg", "-hide_banner", "-nostdin", *args], capture_output=True, text=True)
+    if result.returncode != 0:
+        raise RuntimeError(f"ffmpeg failed: {' '.join(args)}\n{result.stderr}")
+    return result.stderr
+
+
+def measure_loudness(wav: Path) -> float:
+    """Integrated loudness of the clip in LUFS (loudnorm used as a meter only)."""
+    log = run_ffmpeg("-i", str(wav), "-af", f"loudnorm=I={LOUDNESS_LUFS}:print_format=json", "-f", "null", "-")
+    return float(json.loads(log[log.rindex("{"):log.rindex("}") + 1])["input_i"])
+
+
+def encode_m4a(wav: Path, m4a: Path, bitrate_kbps: int) -> float:
+    """Add a short silent lead-in, apply one fixed gain to reach the target loudness, limit peaks, encode AAC.
+
+    Plain loudnorm cannot reach the target on peaky clips without breaking its true-peak
+    ceiling, which left some clips several dB too quiet. A fixed gain plus a limiter keeps
+    every clip at the same loudness. Returns the duration of the m4a in seconds.
+    """
+    gain_db = LOUDNESS_LUFS - measure_loudness(wav)
+    ceiling = 10 ** (PEAK_CEILING_DB / 20)
+    filters = f"adelay={LEAD_IN_MS}:all=1,volume={gain_db:.2f}dB,alimiter=limit={ceiling:.4f}:level=disabled"
+    run_ffmpeg("-y", "-i", str(wav), "-af", filters, "-ac", "1",
+               "-c:a", "aac", "-b:a", f"{bitrate_kbps}k", "-movflags", "+faststart", str(m4a))
+    probe = subprocess.run(
+        ["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(m4a)],
+        capture_output=True, text=True, check=True)
+    return float(probe.stdout.strip())
+
+
 # --------------------------------------------------------------------------- commands
 
 
@@ -170,28 +208,35 @@ def cmd_build(args) -> None:
     en_speed = float(lesson.get("en_speed", 1.0))
     fr, en = make_pipelines()
 
-    items = []
-    for s in lesson["sentences"]:
-        speed = sentence_speed(lesson, s)
-        pause_ms = sentence_pause_ms(lesson, s)
-        mode = s.get("mode", "whole")
-        fr_name, en_name = f"{s['id']}_fr.wav", f"{s['id']}_en.wav"
-        fr_seconds = write_wav(out_dir / fr_name, synth_french(fr, s, args.fr_voice, speed, mode, pause_ms))
-        en_seconds = write_wav(out_dir / en_name, synth_text(en, s["en"], args.en_voice, en_speed))
-        print(f"{s['id']}  speed={speed:.2f} mode={mode}  fr {fr_seconds:.1f}s  en {en_seconds:.1f}s")
-        items.append({
-            "id": s["id"], "fr": s["fr"], "en": s["en"], "speed": speed, "mode": mode,
-            "fr_file": fr_name, "en_file": en_name,
-            "fr_seconds": round(fr_seconds, 2), "en_seconds": round(en_seconds, 2),
-        })
+    def encode(tmp: Path, name: str, audio: np.ndarray) -> tuple[str, float]:
+        """Write audio as a temporary WAV, then normalize and encode it to out_dir/name.m4a."""
+        write_wav(tmp / f"{name}.wav", audio)
+        m4a_name = f"{name}.m4a"
+        return m4a_name, encode_m4a(tmp / f"{name}.wav", out_dir / m4a_name, args.bitrate)
 
-    cue = lesson["finished_cue"]
-    cue_name = f"{cue['id']}_en.wav"
-    cue_seconds = write_wav(out_dir / cue_name, synth_text(en, cue["en"], args.en_voice, en_speed))
+    items = []
+    with tempfile.TemporaryDirectory() as tmp_name:
+        tmp = Path(tmp_name)
+        for s in lesson["sentences"]:
+            speed = sentence_speed(lesson, s)
+            pause_ms = sentence_pause_ms(lesson, s)
+            mode = s.get("mode", "whole")
+            fr_name, fr_seconds = encode(tmp, f"{s['id']}_fr", synth_french(fr, s, args.fr_voice, speed, mode, pause_ms))
+            en_name, en_seconds = encode(tmp, f"{s['id']}_en", synth_text(en, s["en"], args.en_voice, en_speed))
+            print(f"{s['id']}  speed={speed:.2f} mode={mode}  fr {fr_seconds:.2f}s  en {en_seconds:.2f}s")
+            items.append({
+                "id": s["id"], "fr": s["fr"], "en": s["en"], "speed": speed, "mode": mode,
+                "fr_file": fr_name, "en_file": en_name,
+                "fr_seconds": round(fr_seconds, 2), "en_seconds": round(en_seconds, 2),
+            })
+
+        cue = lesson["finished_cue"]
+        cue_name, cue_seconds = encode(tmp, f"{cue['id']}_en", synth_text(en, cue["en"], args.en_voice, en_speed))
 
     manifest = {
         "lesson": lesson["id"], "title": lesson["title"],
-        "voice_fr": args.fr_voice, "voice_en": args.en_voice, "sample_rate": SAMPLE_RATE,
+        "voice_fr": args.fr_voice, "voice_en": args.en_voice,
+        "format": "aac-m4a", "bitrate_kbps": args.bitrate, "loudness_lufs": LOUDNESS_LUFS,
         "items": items,
         "finished_cue": {"id": cue["id"], "en": cue["en"], "file": cue_name, "seconds": round(cue_seconds, 2)},
     }
@@ -240,6 +285,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     build = sub.add_parser("build", parents=[common], help="final files from per-sentence settings")
     build.add_argument("--out", default="build", type=Path)
+    build.add_argument("--bitrate", default=DEFAULT_BITRATE_KBPS, type=int, help="AAC bitrate in kbps")
     build.set_defaults(func=cmd_build)
     return parser
 

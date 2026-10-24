@@ -62,6 +62,8 @@ Work in `content/scripts/generate_kokoro.py`.
 
 Done when: the manifest and compact audio files load and play on iPhone in Opera Touch at a consistent volume, and the clip ends are checked.
 
+**Result (2026-10-25).** `build` writes mono AAC/M4A at 96 kbps, every clip at -16 LUFS (measured gain plus peak limiter, because plain `loudnorm` left peaky clips too quiet), with 100 ms of silence at the start (a desktop player clipped the first word on repeat without it). Durations in `manifest.json` come from the final M4A. Clip ends checked by ear. The iPhone playback check in Opera Touch is done in task 2, once the dev server is reachable over HTTPS.
+
 ### Task 2: project skeleton
 
 - Vite and vanilla TypeScript, in a new folder in this repo.
