@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Headphone Button Test</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 0; padding: 16px; background: #111; color: #eee; }
+  button { font-size: 20px; padding: 14px 20px; width: 100%; border-radius: 10px; border: 0; background: #3b82f6; color: #fff; }
+  button.secondary { font-size: 16px; padding: 10px 16px; background: #374151; margin-top: 10px; }
+  button:disabled { opacity: 0.5; }
+  label { display: block; margin-top: 10px; font-size: 15px; line-height: 1.4; }
+  #counts { margin: 16px 0 6px; font-size: 16px; line-height: 1.7; font-variant-numeric: tabular-nums; }
+  #counts div { display: flex; justify-content: space-between; border-bottom: 1px solid #333; }
+  #counts .hit b { color: #22c55e; }
+  #status { font-size: 14px; margin: 10px 0; line-height: 1.5; color: #aaa; }
+  pre { font-size: 12px; white-space: pre-wrap; background: #000; padding: 8px; border-radius: 6px; max-height: 45vh; overflow-y: auto; }
+</style>
+</head>
+<body>
+<button id="start">Start test</button>
+<label><input type="checkbox" id="useMic" checked> Use the microphone (as in the app)</label>
+<label><input type="checkbox" id="micFirst" checked> Ask for mic permission first, then start the beeps</label>
+<label><input type="checkbox" id="rawMic" checked> Turn off echo cancellation, noise suppression and auto gain on the mic</label>
+<label><input type="checkbox" id="stopOnPause"> A "pause" press really pauses the audio (unchecked: the audio keeps playing, only the reported state changes)</label>
+
+<div id="counts"></div>
+<div id="status">Not started</div>
+<button id="copy" class="secondary">Copy log</button>
+<pre id="log"></pre>
+
+<script>
+const $ = id => document.getElementById(id);
+const logEl = $('log');
+const t0 = Date.now();
+const lines = [];
+
+function log(msg) {
+  const s = ((Date.now() - t0) / 1000).toFixed(1).padStart(7);
+  lines.unshift(s + 's  ' + msg);
+  logEl.textContent = lines.join('\n');
+  try { localStorage.setItem('headphone-test-log', lines.join('\n')); } catch (e) { /* storage may be unavailable */ }
+}
+
+const ACTIONS = ['play', 'pause', 'stop', 'nexttrack', 'previoustrack', 'seekforward', 'seekbackward', 'seekto'];
+const counts = Object.fromEntries(ACTIONS.map(a => [a, 0]));
+counts.keydown = 0;
+counts.volumechange = 0;
+
+function renderCounts() {
+  $('counts').innerHTML = Object.keys(counts).map(k =>
+    '<div class="' + (counts[k] ? 'hit' : '') + '"><span>' + k + '</span><b>' + counts[k] + '</b></div>').join('');
+}
+renderCounts();
+
+// A WAV with a short beep then silence, looped, so it is audible that playback continues while locked.
+function makeWavUrl() {
+  const rate = 22050, beepSec = 0.3, totalSec = 3;
+  const n = rate * totalSec;
+  const buf = new ArrayBuffer(44 + n * 2);
+  const v = new DataView(buf);
+  const w = (o, s) => [...s].forEach((c, i) => v.setUint8(o + i, c.charCodeAt(0)));
+  w(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); w(8, 'WAVE'); w(12, 'fmt ');
+  v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, rate, true); v.setUint32(28, rate * 2, true);
+  v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, 'data'); v.setUint32(40, n * 2, true);
+  for (let i = 0; i < n; i++) {
+    const t = i / rate;
+    const s = t < beepSec ? Math.sin(2 * Math.PI * 660 * t) * 0.3 : 0;
+    v.setInt16(44 + i * 2, s * 32767, true);
+  }
+  return URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
+}
+
+let audio = null;
+let micStream = null; // kept so the capture stays alive
+
+async function openMic() {
+  const off = $('rawMic').checked;
+  try {
+    micStream = await navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: !off, noiseSuppression: !off, autoGainControl: !off }
+    });
+    const track = micStream.getAudioTracks()[0];
+    const s = track.getSettings();
+    log('mic: granted (' + track.label + ')');
+    log('mic settings: echoCancellation=' + s.echoCancellation + ', noiseSuppression=' + s.noiseSuppression + ', autoGainControl=' + s.autoGainControl);
+    track.onmute = () => log('MIC TRACK MUTED');
+    track.onunmute = () => log('mic track unmuted');
+    track.onended = () => log('MIC TRACK ENDED');
+  } catch (e) { log('mic: FAILED ' + e.name + ' ' + e.message); }
+}
+
+function setupMediaSession() {
+  if (!('mediaSession' in navigator)) { log('media session: not supported'); return; }
+  navigator.mediaSession.metadata = new MediaMetadata({ title: 'Headphone test', artist: 'Prototype' });
+  navigator.mediaSession.playbackState = 'playing';
+  const accepted = [], refused = [];
+  for (const a of ACTIONS) {
+    try {
+      navigator.mediaSession.setActionHandler(a, details => {
+        counts[a]++;
+        const extra = details && details.seekTime != null ? ' seekTime=' + details.seekTime : '';
+        log('HEADPHONE BUTTON: ' + a + extra +
+          ' | audio.paused=' + audio.paused +
+          ', reported state=' + navigator.mediaSession.playbackState +
+          ', page=' + document.visibilityState);
+        if (a === 'pause') {
+          navigator.mediaSession.playbackState = 'paused';
+          if ($('stopOnPause').checked) audio.pause();
+        } else if (a === 'play') {
+          navigator.mediaSession.playbackState = 'playing';
+          if (audio.paused) audio.play().catch(e => log('play() after button FAILED ' + e.name));
+        }
+        renderCounts();
+      });
+      accepted.push(a);
+    } catch (e) { refused.push(a); }
+  }
+  log('media session: handlers set for ' + accepted.join(', ') + (refused.length ? ' | not supported: ' + refused.join(', ') : ''));
+}
+
+$('start').onclick = async () => {
+  $('start').disabled = true;
+  log('UA: ' + navigator.userAgent);
+  log('audioSession API: ' + (navigator.audioSession ? 'yes, type=' + navigator.audioSession.type : 'not available'));
+  const useMic = $('useMic').checked, micFirst = $('micFirst').checked;
+  log('options: mic=' + useMic + ', micFirst=' + micFirst + ', rawMic=' + $('rawMic').checked + ', pauseReallyPauses=' + $('stopOnPause').checked);
+
+  if (useMic && micFirst) { await openMic(); log('mic opened BEFORE audio start'); }
+
+  audio = new Audio(makeWavUrl());
+  audio.loop = true;
+  ['play', 'pause', 'ended', 'stalled', 'waiting', 'error'].forEach(ev =>
+    audio.addEventListener(ev, () => log('AUDIO EVENT: ' + ev + ' (paused=' + audio.paused + ')')));
+  audio.addEventListener('volumechange', () => { counts.volumechange++; log('AUDIO EVENT: volumechange (volume=' + audio.volume + ')'); renderCounts(); });
+  try { await audio.play(); log('audio playback: started'); }
+  catch (e) { log('audio playback: FAILED ' + e.message); }
+
+  setupMediaSession();
+
+  if (useMic && !micFirst) { await openMic(); log('mic opened AFTER audio start'); }
+
+  log('READY: lock the screen and press the headphone buttons (see the sequence in the instructions)');
+
+  setInterval(() => {
+    $('status').textContent = 'audio paused=' + audio.paused + ' | time=' + audio.currentTime.toFixed(1) +
+      's | reported state=' + ('mediaSession' in navigator ? navigator.mediaSession.playbackState : 'n/a') +
+      ' | page=' + document.visibilityState;
+  }, 500);
+};
+
+// Some headsets or browsers may deliver buttons as key events instead.
+document.addEventListener('keydown', e => { counts.keydown++; log('KEYDOWN: key=' + e.key + ' code=' + e.code); renderCounts(); });
+
+document.addEventListener('visibilitychange', () => log('page visibility: ' + document.visibilityState));
+
+$('copy').onclick = async () => {
+  const text = lines.slice().reverse().join('\n');
+  try { await navigator.clipboard.writeText(text); log('log copied to clipboard'); }
+  catch (e) {
+    const sel = window.getSelection(), range = document.createRange();
+    range.selectNodeContents(logEl); sel.removeAllRanges(); sel.addRange(range);
+    log('copy FAILED (' + e.name + '): log text selected, copy it by hand');
+  }
+};
+</script>
+</body>
+</html>
