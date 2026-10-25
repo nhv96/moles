@@ -24,7 +24,7 @@ A mobile-friendly app for learning spoken French by *shadowing*: you hear a sent
 1. The French sentence plays.
 2. The app waits for you to speak. Each time you speak, it pauses and keeps waiting.
 3. After 3 seconds of silence, the English meaning plays. The meaning cannot be interrupted, and speech during it is ignored.
-4. If you never speak, the meaning plays after 15 seconds.
+4. If you never speak, the meaning plays after 15 seconds. The same 15 seconds also ends the wait if you (or noise) keep going without a pause for that long.
 5. The next sentence starts.
 6. After the last sentence, a spoken cue says the lesson is finished, then the app stops until you start a lesson again.
 
