@@ -85,6 +85,13 @@ A pure TypeScript module with no audio or mic code.
 
 Done when: unit tests cover every rule in `docs/app-spec.md` section 2, "Per-sentence loop", including: each speech restarts the wait, the meaning cannot be interrupted, speech and commands are ignored during the meaning, "next" skips the meaning, "repeat" replays the French and the loop continues, and the lesson stops after the finished cue.
 
+**Result (2026-10-25).** Done in `app/src/lesson/machine.ts` with tests in `machine.test.ts` (29 tests, a fake clock). The machine reports effects (`playFrench`, `playMeaning`, `playFinishedCue`, `stop`); each play effect carries an id, and `clipEnded(id)` ignores ids of clips that were replaced (for example by "repeat"), so a late "ended" event cannot skip a step. Decisions made while building it:
+- **Max wait (decided 2026-10-25):** the 15 s limit applies in two cases: the learner never speaks after the French ends, or one stretch of non-stop speech or noise lasts 15 s. After speech ends, 3 s of silence ends the wait. So repeating the sentence many times is allowed, and endless noise is still cut off. Both limits use the one `maxWaitMs` setting.
+- Speech during the French clip is ignored, but if the learner is still speaking when the French ends, it counts as speech starting.
+- "Next" skips the meaning only while the French plays or while waiting; during the meaning, as with "repeat" and speech, it is ignored.
+- "Start" always restarts from the first sentence, also after the lesson finished.
+- Pause and resume (play/pause button) are not in the machine; they belong to the audio module (task 4).
+
 ### Task 4: audio module
 
 - Plays the French, English and finished-cue clips from the manifest.
