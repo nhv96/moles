@@ -37,7 +37,6 @@ Control during the lesson is by headphone buttons. Voice commands ("repeat", "ne
 
 - **AAC bitrate.** Chosen in task 1 by listening.
 - **Why the headphone buttons do not arrive with the mic open** (seen in both tests). Possibly the headset's own mic versus the iPhone's built-in mic. Not worked on now; task 5 logs the active input so the answer can come from normal runs.
-- **Home screen from Opera Touch.** All testing is done in Opera Touch only (Safari was used once). Whether the app can be added to the home screen from it is checked in task 2.
 - **Volume buttons.** They are normally handled by iOS and may never reach the page. Confirm in task 0.1.
 
 ## 3. Tasks
@@ -62,7 +61,7 @@ Work in `content/scripts/generate_kokoro.py`.
 
 Done when: the manifest and compact audio files load and play on iPhone in Opera Touch at a consistent volume, and the clip ends are checked.
 
-**Result (2026-10-25).** `build` writes mono AAC/M4A at 96 kbps, every clip at -16 LUFS (measured gain plus peak limiter, because plain `loudnorm` left peaky clips too quiet), with 100 ms of silence at the start (a desktop player clipped the first word on repeat without it). Durations in `manifest.json` come from the final M4A. Clip ends checked by ear. The iPhone playback check in Opera Touch is done in task 2, once the dev server is reachable over HTTPS.
+**Result (2026-10-25).** `build` writes mono AAC/M4A at 96 kbps, every clip at -16 LUFS (measured gain plus peak limiter, because plain `loudnorm` left peaky clips too quiet), with 100 ms of silence at the start (a desktop player clipped the first word on repeat without it). Durations in `manifest.json` come from the final M4A. Clip ends checked by ear. The iPhone playback check in Opera Touch is done in task 4, when the app first plays audio.
 
 ### Task 2: project skeleton
 
@@ -72,6 +71,8 @@ Done when: the manifest and compact audio files load and play on iPhone in Opera
 - The PWA basics: web manifest and icon.
 
 Done when: an empty page from the dev server opens on the iPhone over HTTPS and can be added to the home screen.
+
+**Result (2026-10-25).** Done. The app is in `app/` (Vite, vanilla TypeScript, Vitest, ESLint, Prettier; commands in `app/README.md`). The page opens from the dev server through the `cloudflared` tunnel in Opera Touch, and Opera Touch can add it to the home screen and open it from there.
 
 ### Task 3: lesson state machine
 
