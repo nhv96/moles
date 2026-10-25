@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Audio test</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 0;
+        padding: 16px;
+        background: #111;
+        color: #eee;
+      }
+      button {
+        font-size: 20px;
+        padding: 14px 20px;
+        width: 100%;
+        border-radius: 10px;
+        border: 0;
+        background: #3b82f6;
+        color: #fff;
+        margin-bottom: 10px;
+      }
+      button.secondary {
+        font-size: 16px;
+        padding: 10px 16px;
+        background: #374151;
+      }
+      button:disabled {
+        opacity: 0.5;
+      }
+      #status {
+        font-size: 14px;
+        margin: 10px 0;
+        line-height: 1.5;
+        color: #aaa;
+      }
+      pre {
+        font-size: 12px;
+        white-space: pre-wrap;
+        background: #000;
+        padding: 8px;
+        border-radius: 6px;
+        max-height: 50vh;
+        overflow-y: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <p>
+      Plays lesson 1 in order (French, 3 s wait, meaning, next). Tap start, lock
+      the screen. To force a stall, tap the mic button while a clip plays and
+      watch for "watchdog" lines.
+    </p>
+    <button id="start">Start lesson</button>
+    <button id="mic" class="secondary">
+      Ask for mic permission (forces a stall)
+    </button>
+    <button id="copy" class="secondary">Copy log</button>
+    <div id="status">Not started</div>
+    <pre id="log"></pre>
+    <script type="module" src="/src/audio-test.ts"></script>
+  </body>
+</html>

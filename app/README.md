@@ -11,6 +11,10 @@ npm run format       # Prettier
 npm run build        # type-check + production build
 ```
 
+`npm run dev` and `npm run build` first copy the built lesson audio from `../content/build` into `public/lessons/` (git-ignored).
+
+- `/audio-test.html` (dev only): plays lesson 1 with the state machine and audio module, for screen-locked tests.
+
 ## Open on the iPhone (HTTPS)
 
 ```bash

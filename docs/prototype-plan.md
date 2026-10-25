@@ -101,6 +101,22 @@ Done when: unit tests cover every rule in `docs/app-spec.md` section 2, "Per-sen
 
 Done when: a test page plays all of lesson 1 in order with the screen locked, and a forced stall (for example by opening the mic permission dialog) is recovered by the watchdog.
 
+**Result (2026-10-25): done.** The code and unit tests are in `app/src/audio/` (60 tests in the app), and lesson 1 plays in order with the screen locked on the phone. A forced stall could not be reproduced on the phone, because the mic permission dialog did not stall a one-shot clip; the user accepted the watchdog as verified by unit tests only, with real stalls left for task 9. Details of the build and the phone tests:
+- `loader.ts` downloads the manifest and every clip before the lesson starts and keeps them as blob URLs, so nothing is fetched with the screen locked.
+- `player.ts` (`LessonAudio`) follows the state machine's effects. It plays a silent looping track on one audio element and the clips on a second one, and it exposes the headphone buttons as events. Pause stops only the clip, never the silent track.
+- The watchdog (`stall-detector.ts`) polls every 0.5 s. If the time has not moved for 2 s while a clip should play, it resumes the clip; if it is still stuck 2 s later, it reloads the clip from the start; a clip stuck at its very end counts as ended (the case seen in the mic permission test). The silent track is restarted the same way.
+- Test page: `npm run dev` in `app/`, then open `/audio-test.html` through the tunnel. It plays lesson 1 with the real state machine (no mic, 3 s waits), logs everything, and has a button that asks for mic permission to force a stall. `npm run dev` and `npm run build` first copy `content/build/lesson-*` into `app/public/lessons/` (git-ignored) and stop with a message if the audio has not been built.
+- **Phone test 1 (2026-10-25, mic off, screen locked, 3 s waits):** all 17 clips played in order, including the finished cue. The AAC clips play in Opera Touch, and a clip element and the silent element can play together.
+- **Phone test 2 (30 s waits, `?wait=30`):** the lesson survived the long gaps with the screen locked, with the silent track on.
+- **Phone test 3 (30 s waits, `?wait=30&silent=0`, no silent track):** playback stopped after the screen locked, and after about 5 minutes the page had been reloaded by iOS. **So the silent track is required.**
+- **The silent track's `currentTime` stays at 0.00** while its `paused` is false (the first watchdog version restarted it every 2 s for nothing). The track still works, so the time-based watchdog is dropped for it; the watchdog now only restarts it if it is really paused.
+- **The mic permission dialog did not stall a clip this time** (the clip kept playing and the mic was granted: "iPhone Microphone"), so the clip watchdog's recovery is still unproven on the phone.
+- **Headphone buttons with the mic on: none arrived**, now also seen with the iPhone's built-in mic as the input. The idea that only the headset mic causes this is therefore unlikely.
+- **Headphone buttons with the mic off: they arrive** (pause, next, previous), and so do the lock screen controls. Heard with the physical headphone buttons only: after pause then resume the speech did not continue from where it paused, and after "next" the new sentence started about in the middle. Not an app bug: the same mute of 0 to 1 second happens in Spotify when the headphone buttons are used (not when a song is picked on screen), and the lock screen controls had no problem in this app. The log agrees: the clip pauses at 0.50 s and resumes from 0.50 s, and iOS fires no pause or seek on the clip by itself. So physical headphone presses briefly mute the audio on this phone and headphones, and nothing in the app can change that. One more reason the buttons are a bonus.
+- The silent track fires a `seeking`/`seeked` pair about every 1.6 s while it plays. That is its 1 s loop restarting; it shows the track really is playing.
+- Play/pause pausing the machine's wait timers is left to task 6: the audio module only reports `pausedChange`.
+- This task also does the iPhone playback check of the AAC clips (moved here from task 1).
+
 ### Task 5: mic module
 
 - Requests the mic first, with echo cancellation, noise suppression and auto gain off.
