@@ -1,6 +1,8 @@
 .venv/
 out/
 out-*/
-build/
+# the built lesson audio is committed: the app is deployed from it
+/build/*
+!/build/lesson-*/
 build-*/
 __pycache__/
