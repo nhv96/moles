@@ -88,6 +88,18 @@ A single test page was used. It beeped every 3 seconds, showed a mic level, requ
 | Beep volume in the mic-first order | **Clearly quieter with the mic's echo cancellation, noise suppression and auto gain on; good with them off** (tested in Safari). Probably iOS voice processing. It may still be slightly quieter than audio-first, but good enough. |
 | First run after granting mic permission | **Bug, reproduced.** With audio started before the mic permission, the beep played once, then nothing. The page received no pause, stalled or ended event, and still reported the audio as playing. With "mic first" ticked, the beeps repeated normally. The two runs also differed in input device (iPhone microphone vs the Bluetooth headset's microphone), and earlier, a plain refresh also made the old order work. Follow-up (3 more runs, all in Opera Touch): the stall reproduced in both fresh runs with the old order, with either microphone, so it is not tied to the input device or to a first-time-only effect. The clip was stuck at its end (3.00s of a 3s loop) while the permission dialog was open, and a watchdog restart fixed it after about 3 seconds. With mic first, no stall occurred. This is the likely cause, but not proven. |
 
+### Speech detection test (2026-10-26)
+
+Page: `app/speech-test.html`. iPhone, iOS 18.7, Opera Touch, Bluetooth headphones (MAJOR IV), mic with echo cancellation, noise suppression and auto gain off.
+
+| Question | Result |
+|---|---|
+| Speech and silence detected outdoors, iPhone microphone | **Works.** Every spoken word was detected, a noisy fan did not trigger it. Background noise measured 0.0001 to 0.001, speech peaks 0.003 to 0.04. |
+| Same with the headset microphone | **Works.** Offered to the page as a second input ("MAJOR IV"), but iOS picks the iPhone microphone by itself, so the app must ask for the headset by id if it is wanted. The headset input runs in Bluetooth call mode (16000 Hz). |
+| With the screen locked | **Works.** Speech was detected while the page was hidden, with both microphones. |
+| First calibration after switching to the headset mic | **Wrong at first** (noise 0.03, about 60 times too high) because opening a Bluetooth mic makes a loud burst. Fixed by skipping the first second and taking the quietest half second. |
+| Doors and people talking nearby | **Detected as speech.** A higher minimum level or a longer minimum speech length cannot separate them from the learner's voice without cutting off the learner. Accepted for the prototype. |
+
 ### Headphone button test (2026-10-24)
 
 Page: `headphone-test.html` (branch `test/headphone-buttons`). iPhone, iOS 18.7, Opera Touch (`OPT/6.3.0` in the user agent), Bluetooth headphones (Bluetooth 4).
