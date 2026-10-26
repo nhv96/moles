@@ -142,6 +142,15 @@ Done when: on the iPhone, speech is detected and silence is detected outdoors wi
 
 Done when: lesson 1 plays end to end on the iPhone, hands-free, at the desk.
 
+**Result (2026-10-26): done.** Lesson 1 ran on the iPhone with the headset mic: start, calibration, French, wait, meaning, next sentence, and the Pause, Repeat, Next and Stop buttons all worked. 97 tests pass in the app, plus lint and the build.
+- **Bug found on the phone and fixed:** the English meaning only showed when another event happened to redraw the screen, because the machine's own timers (silence, max wait) start the meaning without telling the screen. The session now redraws on every play effect, with a test. Re-tested: the English shows on every meaning.
+- **Full run with the screen locked (2026-10-26, iPhone microphone):** the page was hidden from 12 s to the end, and all 8 sentences ran through the finished cue to the stop (about 157 s), with every clip ending normally and no stall or restart. The waits ran as designed: 15.0 s when the learner did not speak, shorter (6.6 s after the first French) when speech was heard and then 3 s of silence. The screen unlocked afterwards showed the page alive.
+- Not tested yet (task 9): the pause buttons from the headphones during a real run, and the 30-minute run.
+- `app/src/session.ts` (`LessonSession`) connects the three modules. Start order: tap, mic open, wait for the noise calibration (about 2.5 s), audio start, lesson start. The browser parts are passed in, so `session.test.ts` checks the order and the loop with fakes. If the mic cannot be opened, or gives no sound level within 10 s, the session fails with a message and starts no audio (Decision: no lesson without the mic; the learner taps Start again). At the end of the lesson (after the finished cue) or on Stop, the audio and the mic are released.
+- **Pause (decision):** the machine now has `pause()` and `resume()`. While paused the wait timers do not run, speech is still tracked, and after a pause in the wait the learner gets a full new wait (15 s, or until speech ends plus 3 s), not the rest of the old one. A pause comes from the on-screen button, the headphones or the lock screen, all through the audio module's `pausedChange`.
+- `app/src/main.ts` is the lesson screen (it replaces the skeleton greeting): progress, status ("Listen", "Your turn: repeat it", "Meaning", "Paused"), the French sentence, the English meaning while it plays, and Start, Pause/Resume, Repeat, Next and Stop buttons. The lesson loads when the page opens, so the Start tap can open the mic and the audio context directly. A log with a Copy button is under "Log". The visual design is not part of the prototype.
+- The lesson is `lessons/lesson-01/`, fixed in `main.ts` for now.
+
 ### Task 7: developer settings screen
 
 Visible in development mode only. Live values: silence length, maximum wait, speech threshold, meaning voice speed (see `docs/app-spec.md` section 2).

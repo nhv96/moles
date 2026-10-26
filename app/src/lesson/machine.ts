@@ -46,6 +46,8 @@ export class LessonMachine {
   private clipId = 0;
   /** Whether the learner is speaking right now, tracked in every phase. */
   private speaking = false;
+  /** Paused by the learner: the wait timers do not run until resume(). */
+  private paused = false;
   private silenceTimer: unknown = undefined;
   private maxWaitTimer: unknown = undefined;
 
@@ -105,6 +107,23 @@ export class LessonMachine {
     }
   }
 
+  /**
+   * The learner paused the audio. The wait timers stop, so a pause cannot end
+   * the wait. Speech is still tracked.
+   */
+  pause(): void {
+    if (this.paused) return;
+    this.paused = true;
+    this.clearTimers();
+  }
+
+  /** After a pause in the wait, the learner gets a full new wait. */
+  resume(): void {
+    if (!this.paused) return;
+    this.paused = false;
+    if (this.phase === 'waiting') this.startWait();
+  }
+
   /** Replay the French sentence, then the loop continues. */
   repeat(): void {
     if (this.phase === 'playingFrench' || this.phase === 'waiting') {
@@ -147,16 +166,19 @@ export class LessonMachine {
   }
 
   private startWait(): void {
+    if (this.paused) return;
     if (this.speaking) this.onSpeechStartWhileWaiting();
     else this.armMaxWait();
   }
 
   private onSpeechStartWhileWaiting(): void {
+    if (this.paused) return;
     this.clearTimers();
     this.armMaxWait();
   }
 
   private onSpeechEndWhileWaiting(): void {
+    if (this.paused) return;
     this.clearTimers();
     this.silenceTimer = this.clock.setTimeout(
       () => this.playMeaning(),

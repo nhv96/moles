@@ -348,6 +348,85 @@ describe('end of the lesson', () => {
   });
 });
 
+describe('pause', () => {
+  beforeEach(() => {
+    machine.start();
+    endClip(); // waiting
+  });
+
+  it('stops the max wait from running out', () => {
+    clock.advance(10000);
+    machine.pause();
+    clock.advance(60000);
+    expect(types()).toEqual(['playFrench0']);
+    expect(machine.state.phase).toBe('waiting');
+  });
+
+  it('stops the silence timer', () => {
+    machine.speechStart();
+    machine.speechEnd();
+    clock.advance(2000);
+    machine.pause();
+    clock.advance(60000);
+    expect(types()).toEqual(['playFrench0']);
+  });
+
+  it('gives a full new wait on resume', () => {
+    clock.advance(10000);
+    machine.pause();
+    machine.resume();
+    clock.advance(14999);
+    expect(types()).toEqual(['playFrench0']);
+    clock.advance(1);
+    expect(types()).toEqual(['playFrench0', 'playMeaning0']);
+  });
+
+  it('ignores speech starting and ending while paused, then waits full on resume', () => {
+    machine.pause();
+    machine.speechStart();
+    machine.speechEnd();
+    clock.advance(60000);
+    expect(types()).toEqual(['playFrench0']);
+    machine.resume();
+    clock.advance(14999);
+    expect(types()).toEqual(['playFrench0']);
+    clock.advance(1);
+    expect(types()).toEqual(['playFrench0', 'playMeaning0']);
+  });
+
+  it('on resume while the learner speaks, waits for the speech to end', () => {
+    machine.pause();
+    machine.speechStart();
+    machine.resume();
+    clock.advance(14999);
+    expect(types()).toEqual(['playFrench0']);
+    machine.speechEnd();
+    clock.advance(3000);
+    expect(types()).toEqual(['playFrench0', 'playMeaning0']);
+  });
+
+  it('starts no wait when the French ends while paused, until resume', () => {
+    machine.repeat(); // playing French again
+    machine.pause();
+    endClip();
+    expect(machine.state.phase).toBe('waiting');
+    clock.advance(60000);
+    expect(types()).toEqual(['playFrench0', 'playFrench0']);
+    machine.resume();
+    clock.advance(15000);
+    expect(types()).toEqual(['playFrench0', 'playFrench0', 'playMeaning0']);
+  });
+
+  it('ignores pause and resume called twice', () => {
+    machine.pause();
+    machine.pause();
+    machine.resume();
+    machine.resume();
+    clock.advance(15000);
+    expect(types()).toEqual(['playFrench0', 'playMeaning0']);
+  });
+});
+
 describe('before start', () => {
   it('ignores everything', () => {
     machine.speechStart();
