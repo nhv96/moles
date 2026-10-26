@@ -182,7 +182,7 @@ Done when: the app opens from the Pages URL on the iPhone, can be added to the h
 ### Task 9: field testing
 
 - Full lesson 1 on a walk.
-- A 30-minute run with a check of battery use (only 10 minutes have been tested so far).
+- A 30-minute run (only 10 minutes have been tested so far). Battery use is not checked (decision 2026-10-26: not a priority).
 - An interruption (phone call, Siri, notification): the app must detect it and resume cleanly.
 - Real French speech and the English meaning voice on the Bluetooth headphones with the mic active (so far only beeps were tested).
 

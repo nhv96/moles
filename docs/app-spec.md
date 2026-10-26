@@ -120,7 +120,7 @@ Page: `headphone-test.html` (branch `test/headphone-buttons`). iPhone, iOS 18.7,
 3. **Voice commands** are unproven in the browser.
 4. **Bluetooth headphones** often drop to phone-call audio quality while the mic is active. In the test, the beeps stayed clear on the user's Bluetooth headphones. Real speech and the meaning voice still need checking.
 5. **Interruptions** (phone call, Siri, notification) can stop audio and the mic. The app must detect this and resume cleanly. Untested.
-6. **Long sessions and battery.** Only 10 minutes have been tested. A 30-minute test, with a check of battery use, is still pending.
+6. **Long sessions.** Only 10 minutes have been tested. A 30-minute test is still pending. Battery use is not checked (decision 2026-10-26: not a priority).
 7. **Content quality and pronunciation.** A beginner can't judge French pronunciation. The French text (written by Claude) and a sample of the audio still need review by a native speaker; the user knows one who can help. Not done yet.
 8. **Apple Developer account.** Not needed for the web app. A native app would need a paid account (about $99/year, to be verified) and cloud builds.
 9. **Silent playback stall.** Playback can get stuck without any event if the mic permission dialog is open when the clip's loop point passes. Mic-first order and a watchdog address it (see section 3).
