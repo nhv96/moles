@@ -172,6 +172,13 @@ Deploy the static build to GitHub Pages over HTTPS.
 
 Done when: the app opens from the Pages URL on the iPhone, can be added to the home screen, and the lesson runs from there, in the browser the user uses (Opera Touch). If it cannot be added from there, this is raised before going on.
 
+**Progress (2026-10-26): files written, nothing deployed yet.** Decisions (user): the repo `nhv96/moles` is public (the Pages URL is `https://nhv96.github.io/moles/`), and the built lesson audio is committed to git (`content/build/lesson-*`, 452 KB) so that GitHub can build and deploy by itself.
+- `.github/workflows/deploy.yml`: on every push and pull request it runs lint, the Prettier check, the tests and the build; on a push to `main` (or by hand) it then deploys `app/dist` to GitHub Pages.
+- The site is served under `/moles/`, so `vite.config.ts` reads `BASE_PATH` (the workflow sets it from the repo name; locally it stays `/`). The web manifest now uses relative paths (`start_url` `./`, icons without a leading slash), so the home-screen app works under any path. A local build with `BASE_PATH=/moles/` was checked: the page, the icons, the manifest, the mic script and the lesson URL all start with `/moles/`.
+- `content/.gitignore` no longer ignores `build/lesson-*`. `@types/node` was added for the config.
+- **One manual step for the user:** in the repo on GitHub, Settings, Pages, set Source to "GitHub Actions" (before the first run, or the workflow fails at the Pages step).
+
+
 ### Task 9: field testing
 
 - Full lesson 1 on a walk.

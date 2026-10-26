@@ -25,3 +25,7 @@ cloudflared tunnel --url http://localhost:5173   # in another terminal
 ```
 
 Open the printed `https://*.trycloudflare.com` URL on the phone.
+
+## Deploy (GitHub Pages)
+
+`.github/workflows/deploy.yml` checks the app and, on every push to `main`, deploys it to `https://nhv96.github.io/moles/`. The lesson audio is taken from `../content/build` (committed). To try the Pages build locally: `BASE_PATH=/moles/ npm run build && npm run preview`.

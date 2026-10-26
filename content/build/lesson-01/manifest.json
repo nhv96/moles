@@ -1,0 +1,105 @@
+{
+  "lesson": "lesson-01",
+  "title": "Introduce yourself (persona: Marc)",
+  "voice_fr": "ff_siwis",
+  "voice_en": "af_heart",
+  "format": "aac-m4a",
+  "bitrate_kbps": 96,
+  "loudness_lufs": -16.0,
+  "items": [
+    {
+      "id": "s01",
+      "fr": "Bonjour, je m'appelle Marc.",
+      "en": "Hello, my name is Marc.",
+      "speed": 0.87,
+      "mode": "phrases",
+      "fr_file": "s01_fr.m4a",
+      "en_file": "s01_en.m4a",
+      "fr_seconds": 2.36,
+      "en_seconds": 2.05
+    },
+    {
+      "id": "s02",
+      "fr": "Je suis italien.",
+      "en": "I am Italian.",
+      "speed": 0.9,
+      "mode": "whole",
+      "fr_file": "s02_fr.m4a",
+      "en_file": "s02_en.m4a",
+      "fr_seconds": 1.29,
+      "en_seconds": 1.8
+    },
+    {
+      "id": "s03",
+      "fr": "J'habite en Belgique.",
+      "en": "I live in Belgium.",
+      "speed": 0.87,
+      "mode": "whole",
+      "fr_file": "s03_fr.m4a",
+      "en_file": "s03_en.m4a",
+      "fr_seconds": 1.45,
+      "en_seconds": 1.95
+    },
+    {
+      "id": "s04",
+      "fr": "Je travaille ici.",
+      "en": "I work here.",
+      "speed": 0.92,
+      "mode": "whole",
+      "fr_file": "s04_fr.m4a",
+      "en_file": "s04_en.m4a",
+      "fr_seconds": 1.22,
+      "en_seconds": 1.6
+    },
+    {
+      "id": "s05",
+      "fr": "Je parle un peu français.",
+      "en": "I speak a little French.",
+      "speed": 0.85,
+      "mode": "whole",
+      "fr_file": "s05_fr.m4a",
+      "en_file": "s05_en.m4a",
+      "fr_seconds": 1.69,
+      "en_seconds": 2.05
+    },
+    {
+      "id": "s06",
+      "fr": "J'apprends le français.",
+      "en": "I am learning French.",
+      "speed": 0.85,
+      "mode": "whole",
+      "fr_file": "s06_fr.m4a",
+      "en_file": "s06_en.m4a",
+      "fr_seconds": 1.47,
+      "en_seconds": 1.95
+    },
+    {
+      "id": "s07",
+      "fr": "Et vous, comment vous appelez-vous ?",
+      "en": "And you, what is your name?",
+      "speed": 0.9,
+      "mode": "phrases",
+      "fr_file": "s07_fr.m4a",
+      "en_file": "s07_en.m4a",
+      "fr_seconds": 2.07,
+      "en_seconds": 2.2
+    },
+    {
+      "id": "s08",
+      "fr": "Plus lentement, s'il vous plaît.",
+      "en": "More slowly, please.",
+      "speed": 0.9,
+      "mode": "phrases",
+      "fr_file": "s08_fr.m4a",
+      "en_file": "s08_en.m4a",
+      "fr_seconds": 2.07,
+      "en_seconds": 2.05
+    }
+  ],
+  "finished_cue": {
+    "id": "end",
+    "en": "The lesson is finished.",
+    "file": "end_en.m4a",
+    "seconds": 2.02
+  }
+}
