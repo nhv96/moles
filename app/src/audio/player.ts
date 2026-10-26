@@ -14,6 +14,8 @@ export interface MediaElement {
   src: string;
   loop: boolean;
   currentTime: number;
+  playbackRate: number;
+  defaultPlaybackRate: number;
   readonly duration: number;
   readonly paused: boolean;
   readonly readyState: number;
@@ -72,9 +74,12 @@ export class LessonAudio {
   private readonly clip: MediaElement;
   private readonly silent: MediaElement;
   private readonly clipStall: StallDetector;
-  private current: { id: number; url: string; stalls: number } | undefined;
+  private current:
+    { id: number; url: string; stalls: number; meaning: boolean } | undefined;
+  private meaningRate = 1;
   private started = false;
   private userPaused = false;
+  private disposed = false;
   private pollHandle: unknown;
 
   constructor(
@@ -111,6 +116,7 @@ export class LessonAudio {
 
   /** Follows the effects of the lesson state machine. */
   apply(effect: Effect): void {
+    if (this.disposed) return;
     if (effect.type === 'stop') {
       this.current = undefined;
       this.clip.pause();
@@ -122,11 +128,29 @@ export class LessonAudio {
         : effect.type === 'playMeaning'
           ? this.clips.meaningUrl(effect.index)
           : this.clips.finishedCueUrl();
-    this.current = { id: effect.id, url, stalls: 0 };
+    this.current = {
+      id: effect.id,
+      url,
+      stalls: 0,
+      meaning: effect.type === 'playMeaning',
+    };
     this.clipStall.reset();
     this.clip.src = url;
+    this.applyRate(); // after src: loading a new source resets the rate
     this.clip.currentTime = 0;
     if (!this.userPaused) this.playClip();
+  }
+
+  /** Speed of the English meaning voice (1 = normal), also while one plays. */
+  setMeaningRate(rate: number): void {
+    this.meaningRate = rate;
+    this.applyRate();
+  }
+
+  private applyRate(): void {
+    const rate = this.current?.meaning ? this.meaningRate : 1;
+    this.clip.defaultPlaybackRate = rate;
+    this.clip.playbackRate = rate;
   }
 
   pause(): void {
@@ -148,6 +172,8 @@ export class LessonAudio {
   }
 
   dispose(): void {
+    this.disposed = true;
+    this.current = undefined;
     this.deps.ticker.clearInterval(this.pollHandle);
     this.clip.pause();
     this.silent.pause();
@@ -254,6 +280,7 @@ export class LessonAudio {
         `watchdog: clip ${current.id} still stalled, reloading it from the start`,
       );
       this.clip.src = current.url;
+      this.applyRate();
       this.clip.currentTime = 0;
       this.playClip();
     }
