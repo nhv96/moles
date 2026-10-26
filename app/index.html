@@ -13,9 +13,104 @@
     <link rel="apple-touch-icon" href="/icon-180.png" />
     <link rel="icon" type="image/png" href="/icon-192.png" />
     <title>Morning Lesson</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 0;
+        padding: 16px;
+        padding-top: max(16px, env(safe-area-inset-top));
+        background: #111;
+        color: #eee;
+      }
+      #app {
+        max-width: 480px;
+        margin: 0 auto;
+      }
+      #progress {
+        text-align: right;
+        color: #888;
+        min-height: 1.2em;
+      }
+      #status {
+        font-size: 20px;
+        color: #9ca3af;
+        text-align: center;
+        margin: 16px 0;
+      }
+      #french {
+        font-size: 28px;
+        font-weight: bold;
+        text-align: center;
+        min-height: 3.5em;
+      }
+      #english {
+        font-size: 20px;
+        color: #93c5fd;
+        text-align: center;
+        min-height: 3em;
+      }
+      button {
+        font-size: 20px;
+        padding: 16px 20px;
+        width: 100%;
+        border-radius: 12px;
+        border: 0;
+        background: #3b82f6;
+        color: #fff;
+        margin-bottom: 10px;
+      }
+      button.secondary {
+        background: #374151;
+      }
+      button:disabled {
+        opacity: 0.5;
+      }
+      #controls {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      #controls #pause {
+        grid-column: 1 / -1;
+        margin: 0;
+      }
+      #controls button {
+        margin: 0;
+      }
+      details {
+        margin-top: 24px;
+        color: #888;
+      }
+      pre {
+        font-size: 12px;
+        white-space: pre-wrap;
+        background: #000;
+        padding: 8px;
+        border-radius: 6px;
+        max-height: 40vh;
+        overflow-y: auto;
+      }
+    </style>
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app">
+      <div id="progress"></div>
+      <div id="status">Loading the lesson…</div>
+      <div id="french"></div>
+      <div id="english"></div>
+      <button id="start" disabled>Start</button>
+      <div id="controls" hidden>
+        <button id="pause">Pause</button>
+        <button id="repeat" class="secondary">Repeat</button>
+        <button id="next" class="secondary">Next</button>
+        <button id="stop" class="secondary">Stop</button>
+      </div>
+      <details>
+        <summary>Log</summary>
+        <button id="copy" class="secondary">Copy log</button>
+        <pre id="log"></pre>
+      </details>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
