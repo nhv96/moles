@@ -124,6 +124,12 @@ export class LessonMachine {
     if (this.phase === 'waiting') this.startWait();
   }
 
+  /** End the lesson now: cancels the timers and ignores everything after this. */
+  halt(): void {
+    this.clearTimers();
+    this.phase = 'finished';
+  }
+
   /** Replay the French sentence, then the loop continues. */
   repeat(): void {
     if (this.phase === 'playingFrench' || this.phase === 'waiting') {

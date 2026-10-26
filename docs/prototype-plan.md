@@ -157,6 +157,15 @@ Visible in development mode only. Live values: silence length, maximum wait, spe
 
 Done when: the values change the loop behavior without a rebuild.
 
+**Result (2026-10-26): done.** Tested on the iPhone: the sliders change the loop without a rebuild (maximum wait, meaning speed) and the stop-then-start bug is fixed. 114 tests pass in the app, plus lint, type-check, Prettier and the build.
+- `app/src/settings.ts` holds the settings, their ranges and the stored form; `app/src/dev-settings.ts` is the panel (sliders, "Reset to defaults"). `main.ts` loads the panel only when `import.meta.env.DEV` is true, so the production build does not contain it (checked: the built bundle has none of its text).
+- Settings: silence that ends the wait (3 s), maximum wait (15 s), speech start ratio (3), end ratio (2), lowest start threshold (0.003), speech must last (100 ms), quiet that ends speech (400 ms), meaning voice speed (1.0×, range 0.5 to 1.5). The wait times count from the next wait on; the rest applies at once, also during a lesson.
+- **Decision:** the values are kept in the browser (localStorage) between page loads, so a tuning session on the phone survives a reload; "Reset to defaults" clears them. Not shared between devices.
+- **Bug found on the phone and fixed (2026-10-26):** Stop during the wait, then Start again, played the old run's meaning on top of the new run. Stop released the audio and the mic but not the machine's pending wait timer, which later started a clip on the old audio. Now the machine has `halt()` (cancels its timers and ignores everything after), the session calls it when it finishes, ignores effects once finished, and the audio module ignores clips after `dispose()`. Tests added at all three levels (114 in total).
+- A one-off `Importing a module script failed` on Start (the mic's level script) did not come back after a reload. Cause not found; most likely a failed request through the tunnel. If it returns, make the mic start retry the script load once.
+- **Meaning voice speed** is the audio element's playback rate, set after each new source (a new source resets it). Checked on the phone (2026-10-26): at 0.9× the voice keeps a natural pitch. Other speeds are not checked.
+
+
 ### Task 8: hosting
 
 Deploy the static build to GitHub Pages over HTTPS.

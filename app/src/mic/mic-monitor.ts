@@ -63,6 +63,11 @@ export class MicMonitor {
     return run;
   }
 
+  /** Changes the speech detector settings at once. */
+  updateSettings(settings: Partial<DetectorSettings>): void {
+    this.detector.updateSettings(settings);
+  }
+
   /** Measure the background noise again. */
   recalibrate(): void {
     this.detector.recalibrate();

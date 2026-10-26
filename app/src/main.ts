@@ -4,6 +4,7 @@ import { createBrowserAudio } from './audio/browser';
 import { type LoadedLesson, loadLesson } from './audio/loader';
 import { MicMonitor } from './mic/mic-monitor';
 import { LessonSession } from './session';
+import { DEFAULT_DEV_SETTINGS, type DevSettings } from './settings';
 
 const LESSON_URL = `${import.meta.env.BASE_URL}lessons/lesson-01/`;
 
@@ -23,6 +24,7 @@ el('copy').onclick = () => void navigator.clipboard.writeText(lines.join('\n'));
 
 let lesson: LoadedLesson | undefined;
 let session: LessonSession | undefined;
+let settings: DevSettings = DEFAULT_DEV_SETTINGS;
 
 function render(): void {
   const start = el<HTMLButtonElement>('start');
@@ -100,6 +102,7 @@ el('start').onclick = () => {
     onChange: render,
     log,
   });
+  session.applySettings(settings);
   void session.start();
 };
 
@@ -111,6 +114,20 @@ el('stop').onclick = () => session?.stop();
 document.addEventListener('visibilitychange', () =>
   log(`page ${document.visibilityState}`),
 );
+
+// Development mode only: the module is not part of the production build.
+if (import.meta.env.DEV) {
+  void import('./dev-settings').then(({ mountDevSettings }) =>
+    mountDevSettings(
+      el('app'),
+      (next) => {
+        settings = next;
+        session?.applySettings(next);
+      },
+      log,
+    ),
+  );
+}
 
 render();
 loadLesson(LESSON_URL).then(

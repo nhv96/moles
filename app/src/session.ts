@@ -14,6 +14,8 @@ import {
   type Settings,
 } from './lesson/machine';
 import type { MicEvents } from './mic/mic-monitor';
+import type { DetectorSettings } from './mic/speech-detector';
+import type { DevSettings } from './settings';
 
 export interface SessionAudio {
   start(): Promise<void>;
@@ -21,11 +23,13 @@ export interface SessionAudio {
   pause(): void;
   resume(): void;
   dispose(): void;
+  setMeaningRate(rate: number): void;
 }
 
 export interface SessionMic {
   open(): Promise<void>;
   close(): void;
+  updateSettings(settings: Partial<DetectorSettings>): void;
 }
 
 export interface SessionDeps {
@@ -132,6 +136,17 @@ export class LessonSession {
     this.deps.onChange();
   }
 
+  /**
+   * Applies the developer settings, also while the lesson runs. The wait
+   * times count from the next wait on; the rest applies at once.
+   */
+  applySettings(settings: DevSettings): void {
+    const { silenceMs, maxWaitMs, meaningRate, ...detector } = settings;
+    this.machine.updateSettings({ silenceMs, maxWaitMs });
+    this.mic.updateSettings(detector);
+    this.audio.setMeaningRate(meaningRate);
+  }
+
   /** Play/pause button on the screen. */
   togglePause(): void {
     if (this.phase !== 'running') return;
@@ -174,6 +189,7 @@ export class LessonSession {
   }
 
   private onEffect(effect: Effect): void {
+    if (this.phase === 'finished' || this.phase === 'failed') return;
     this.deps.log(`effect: ${JSON.stringify(effect)}`);
     this.audio.apply(effect);
     if (effect.type === 'stop') this.finish('finished');
@@ -195,6 +211,7 @@ export class LessonSession {
 
   private finish(phase: 'finished' | 'failed'): void {
     this.phase = phase;
+    this.machine.halt(); // a pending wait timer must not start a clip later
     this.audio.dispose();
     this.mic.close();
     this.deps.onChange();

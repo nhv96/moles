@@ -427,6 +427,22 @@ describe('pause', () => {
   });
 });
 
+describe('halt', () => {
+  it('cancels a pending wait and ignores later events', () => {
+    machine.start();
+    endClip(); // waiting
+    machine.halt();
+    clock.advance(60000);
+    machine.speechStart();
+    machine.speechEnd();
+    clock.advance(60000);
+    machine.repeat();
+    machine.next();
+    expect(types()).toEqual(['playFrench0']);
+    expect(machine.state.phase).toBe('finished');
+  });
+});
+
 describe('before start', () => {
   it('ignores everything', () => {
     machine.speechStart();

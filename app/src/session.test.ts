@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import type { PlayerEvents } from './audio/player';
 import type { Clock, Effect } from './lesson/machine';
 import type { MicEvents } from './mic/mic-monitor';
+import { DEFAULT_DEV_SETTINGS } from './settings';
 import { LessonSession, type SessionAudio, type SessionMic } from './session';
 
 class FakeClock implements Clock {
@@ -36,6 +37,8 @@ let calls: string[];
 let audioEvents: PlayerEvents;
 let micEvents: MicEvents;
 let applied: Effect[];
+let meaningRate: number | undefined;
+let detectorSettings: object | undefined;
 let micOpenError: Error | undefined;
 let changes: number;
 let session: LessonSession;
@@ -83,6 +86,7 @@ beforeEach(() => {
       audioEvents.pausedChange(false);
     },
     dispose: () => void calls.push('audio.dispose'),
+    setMeaningRate: (rate) => void (meaningRate = rate),
   };
   const mic: SessionMic = {
     open: async () => {
@@ -90,6 +94,7 @@ beforeEach(() => {
       if (micOpenError) throw micOpenError;
     },
     close: () => void calls.push('mic.close'),
+    updateSettings: (s) => void (detectorSettings = s),
   };
   session = new LessonSession({
     sentenceCount: 2,
@@ -210,6 +215,14 @@ describe('the loop', () => {
     expect(applied.at(-1)).toMatchObject({ type: 'playFrench' });
   });
 
+  it('after stop, a pending wait does not play anything', () => {
+    audioEvents.clipEnded(lastId()); // waiting, timer pending
+    session.stop();
+    const count = applied.length;
+    clock.advance(60000);
+    expect(applied).toHaveLength(count);
+  });
+
   it('stop ends the lesson early and releases the mic', () => {
     session.stop();
     expect(session.state.phase).toBe('finished');
@@ -231,6 +244,44 @@ describe('the loop', () => {
     audioEvents.clipEnded(lastId());
     micEvents.speechStart();
     expect(changes).toBe(before + 2);
+  });
+});
+
+describe('applySettings', () => {
+  const settings = {
+    ...DEFAULT_DEV_SETTINGS,
+    silenceMs: 1000,
+    maxWaitMs: 5000,
+    startRatio: 4,
+    meaningRate: 0.8,
+  };
+
+  it('passes the detector settings to the mic and the speed to the audio', () => {
+    session.applySettings(settings);
+    expect(meaningRate).toBe(0.8);
+    expect(detectorSettings).toMatchObject({ startRatio: 4, minLevel: 0.003 });
+    expect(detectorSettings).not.toHaveProperty('silenceMs');
+    expect(detectorSettings).not.toHaveProperty('meaningRate');
+  });
+
+  it('changes the wait times of the loop', async () => {
+    await startRunning();
+    session.applySettings(settings);
+    audioEvents.clipEnded(lastId());
+    clock.advance(4999);
+    expect(applied.at(-1)).toMatchObject({ type: 'playFrench' });
+    clock.advance(1);
+    expect(applied.at(-1)).toMatchObject({ type: 'playMeaning' });
+  });
+
+  it('changes the silence length', async () => {
+    await startRunning();
+    session.applySettings(settings);
+    audioEvents.clipEnded(lastId());
+    micEvents.speechStart();
+    micEvents.speechEnd();
+    clock.advance(1000);
+    expect(applied.at(-1)).toMatchObject({ type: 'playMeaning' });
   });
 });
 

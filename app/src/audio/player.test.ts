@@ -12,6 +12,8 @@ class FakeAudio implements MediaElement {
   src = '';
   loop = false;
   currentTime = 0;
+  playbackRate = 1;
+  defaultPlaybackRate = 1;
   duration = Number.NaN;
   paused = true;
   readyState = 4;
@@ -155,6 +157,34 @@ describe('playing clips', () => {
   });
 });
 
+describe('meaning speed', () => {
+  beforeEach(async () => {
+    await audio.start();
+    audio.setMeaningRate(0.8);
+  });
+
+  it('slows only the meaning', () => {
+    audio.apply({ type: 'playFrench', index: 0, id: 1 });
+    expect(clipEl().playbackRate).toBe(1);
+    audio.apply({ type: 'playMeaning', index: 0, id: 2 });
+    expect(clipEl().playbackRate).toBe(0.8);
+    expect(clipEl().defaultPlaybackRate).toBe(0.8);
+    audio.apply({ type: 'playFrench', index: 1, id: 3 });
+    expect(clipEl().playbackRate).toBe(1);
+    audio.apply({ type: 'playFinishedCue', id: 4 });
+    expect(clipEl().playbackRate).toBe(1);
+  });
+
+  it('changes at once while a meaning plays, and not while French plays', () => {
+    audio.apply({ type: 'playMeaning', index: 0, id: 1 });
+    audio.setMeaningRate(1.2);
+    expect(clipEl().playbackRate).toBe(1.2);
+    audio.apply({ type: 'playFrench', index: 0, id: 2 });
+    audio.setMeaningRate(0.9);
+    expect(clipEl().playbackRate).toBe(1);
+  });
+});
+
 describe('headphone buttons', () => {
   beforeEach(async () => {
     await audio.start();
@@ -254,6 +284,14 @@ describe('watchdog', () => {
 });
 
 describe('dispose', () => {
+  it('ignores clips that are applied afterwards', async () => {
+    await audio.start();
+    audio.dispose();
+    const plays = clipEl().playCalls;
+    audio.apply({ type: 'playMeaning', index: 0, id: 1 });
+    expect(clipEl().playCalls).toBe(plays);
+  });
+
   it('stops everything and removes the button handlers', async () => {
     await audio.start();
     audio.dispose();
