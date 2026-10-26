@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Speech test</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 0;
+        padding: 16px;
+        background: #111;
+        color: #eee;
+      }
+      button {
+        font-size: 20px;
+        padding: 14px 20px;
+        width: 100%;
+        border-radius: 10px;
+        border: 0;
+        background: #3b82f6;
+        color: #fff;
+        margin-bottom: 10px;
+      }
+      button.secondary {
+        font-size: 16px;
+        padding: 10px 16px;
+        background: #374151;
+      }
+      button:disabled {
+        opacity: 0.5;
+      }
+      #state {
+        font-size: 28px;
+        font-weight: bold;
+        text-align: center;
+        padding: 14px;
+        border-radius: 10px;
+        background: #1f2937;
+        margin: 10px 0;
+      }
+      #state.speaking {
+        background: #166534;
+      }
+      #state.calibrating {
+        background: #92400e;
+      }
+      #barWrap {
+        position: relative;
+        height: 28px;
+        background: #333;
+        border-radius: 6px;
+        overflow: hidden;
+      }
+      #bar {
+        height: 100%;
+        width: 0;
+        background: #22c55e;
+      }
+      .mark {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+      }
+      #markStart {
+        background: #f87171;
+      }
+      #markEnd {
+        background: #fbbf24;
+      }
+      #status {
+        font-size: 14px;
+        margin: 10px 0;
+        line-height: 1.6;
+        color: #aaa;
+      }
+      label {
+        display: block;
+        font-size: 14px;
+        margin-top: 8px;
+      }
+      input[type='range'] {
+        width: 100%;
+      }
+      pre {
+        font-size: 12px;
+        white-space: pre-wrap;
+        background: #000;
+        padding: 8px;
+        border-radius: 6px;
+        max-height: 40vh;
+        overflow-y: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <p>
+      Opens the mic with echo cancellation, noise suppression and auto gain off.
+      After tapping start, stay quiet for 2.5 s (the app measures the background
+      noise), then speak. Try it with the screen locked too.
+    </p>
+    <button id="start">Start</button>
+    <button id="recalibrate" class="secondary" disabled>
+      Measure the noise again (stay quiet)
+    </button>
+    <label
+      >Microphone:
+      <select id="input" disabled>
+        <option>(tap Start first)</option>
+      </select></label
+    >
+    <button id="switch" class="secondary" disabled>
+      Use the selected microphone
+    </button>
+    <div id="state">Not started</div>
+    <div id="barWrap">
+      <div id="bar"></div>
+      <div class="mark" id="markStart"></div>
+      <div class="mark" id="markEnd"></div>
+    </div>
+    <div id="status"></div>
+    <label
+      >Start ratio: <b id="startRatioValue"></b> × noise (red mark)
+      <input type="range" id="startRatio" min="15" max="100" value="30" />
+    </label>
+    <label
+      >End ratio: <b id="endRatioValue"></b> × noise (yellow mark)
+      <input type="range" id="endRatio" min="10" max="80" value="20" />
+    </label>
+    <label
+      >Minimum level: <b id="minLevelValue"></b> (lowest start threshold)
+      <input type="range" id="minLevel" min="10" max="300" value="30" />
+    </label>
+    <label
+      >Speech must last: <b id="startMsValue"></b> ms before it counts
+      <input
+        type="range"
+        id="startMs"
+        min="50"
+        max="600"
+        step="50"
+        value="100"
+      />
+    </label>
+    <button id="copy" class="secondary">Copy log</button>
+    <pre id="log"></pre>
+    <script type="module" src="/src/speech-test.ts"></script>
+  </body>
+</html>
