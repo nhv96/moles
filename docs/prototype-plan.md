@@ -1,6 +1,6 @@
 # Prototype Plan: Hands-Free French Listening App (MVP v1)
 
-Status as of 2026-10-24. Items are marked **Decided**, **Proposed** (suggested, not yet confirmed) or **Open**.
+Status as of 2026-10-27: **the prototype works and is concluded** (tasks 0 to 9 are done, except the interruption test, which is written up for later in `docs/interruption-test-plan.md`). Items are marked **Decided**, **Proposed** (suggested, not yet confirmed) or **Open**.
 
 Related: `docs/app-spec.md` (scope, loop rules, tech stack, test results), `docs/content-decision.md` (content and audio decisions), `content/README.md` (how to run the generator).
 
@@ -187,6 +187,13 @@ Done when: the app opens from the Pages URL on the iPhone, can be added to the h
 - Real French speech and the English meaning voice on the Bluetooth headphones with the mic active (so far only beeps were tested).
 
 Done when: the results are written into `docs/app-spec.md` section 4 and the failures found have follow-up tasks.
+
+**Progress (2026-10-27): three of four done, the interruption test is not done.** Results are in `docs/app-spec.md` section 4, "Field test (2026-10-27)".
+- Full lesson 1 on a walk, with Bluetooth headphones and their mic: no issues. This also covers real French speech and the English meaning voice with the mic active.
+- Long session: lesson 1 is only a few minutes long, so the user replayed sentences and restarted the lesson with the screen locked. The total was under 30 minutes, judged long enough: no issues, no sudden battery drop.
+- Interruption (phone call, Siri, notification): **not tested, postponed** (decision 2026-10-27: the user cannot run it now). The test is written in `docs/interruption-test-plan.md`. Until it is run, the expected behavior (from reading the code) is: playback probably recovers by itself, the mic probably stays dead so the app keeps going on the timers only, and the wait timers keep running during the call.
+
+**Prototype concluded (2026-10-27, decision by the user).** The prototype works: lesson 1 runs end to end on the iPhone, hands-free, with the screen locked, over Bluetooth headphones and their mic, from the home-screen app on GitHub Pages. The next work is new features (see section 6, Deferred).
 
 ## 4. Order and dependencies
 

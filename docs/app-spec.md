@@ -100,6 +100,17 @@ Page: `app/speech-test.html`. iPhone, iOS 18.7, Opera Touch, Bluetooth headphone
 | First calibration after switching to the headset mic | **Wrong at first** (noise 0.03, about 60 times too high) because opening a Bluetooth mic makes a loud burst. Fixed by skipping the first second and taking the quietest half second. |
 | Doors and people talking nearby | **Detected as speech.** A higher minimum level or a longer minimum speech length cannot separate them from the learner's voice without cutting off the learner. Accepted for the prototype. |
 
+### Field test (2026-10-27)
+
+The app from GitHub Pages, added to the home screen, iPhone, Opera Touch, Bluetooth headphones and their mic.
+
+| Question | Result |
+|---|---|
+| Full lesson 1 on a walk | **Works.** No issues. |
+| Real French speech and the English meaning voice on the Bluetooth headphones with the mic active | **Works.** No issues. |
+| Long session, screen locked | **Works, but shorter than planned.** Lesson 1 is only a few minutes long, so the user replayed sentences and started the lesson again while the screen stayed locked. The total stayed under 30 minutes, which the user judged long enough: no problems, and no sudden drop in battery. Battery use was not measured (not a priority). |
+| Interruption (phone call, Siri, notification) | **Not tested yet.** The test is written in `docs/interruption-test-plan.md`. |
+
 ### Headphone button test (2026-10-24)
 
 Page: `headphone-test.html` (branch `test/headphone-buttons`). iPhone, iOS 18.7, Opera Touch (`OPT/6.3.0` in the user agent), Bluetooth headphones (Bluetooth 4).
@@ -118,9 +129,9 @@ Page: `headphone-test.html` (branch `test/headphone-buttons`). iPhone, iOS 18.7,
 1. **Platform risk.** Background audio and mic behavior in iOS web apps is controlled by Apple and may change.
 2. **Noise.** Wind, traffic and chores can look like speech, so the app might wait for a sentence to end that never ends. The 15-second fallback covers it.
 3. **Voice commands** are unproven in the browser.
-4. **Bluetooth headphones** often drop to phone-call audio quality while the mic is active. In the test, the beeps stayed clear on the user's Bluetooth headphones. Real speech and the meaning voice still need checking.
-5. **Interruptions** (phone call, Siri, notification) can stop audio and the mic. The app must detect this and resume cleanly. Untested.
-6. **Long sessions.** Only 10 minutes have been tested. A 30-minute test is still pending. Battery use is not checked (decision 2026-10-26: not a priority).
+4. **Bluetooth headphones** often drop to phone-call audio quality while the mic is active. In the test, the beeps stayed clear on the user's Bluetooth headphones. Real speech and the meaning voice were checked in the field test (2026-10-27): no issues.
+5. **Interruptions** (phone call, Siri, notification) can stop audio and the mic. The app must detect this and resume cleanly. Untested; the test plan is `docs/interruption-test-plan.md`.
+6. **Long sessions.** Only 10 minutes have been tested. The field test (2026-10-27) ran for most of 30 minutes with the screen locked, with no problems and no sudden battery drop. Battery use is not measured (decision 2026-10-26: not a priority).
 7. **Content quality and pronunciation.** A beginner can't judge French pronunciation. The French text (written by Claude) and a sample of the audio still need review by a native speaker; the user knows one who can help. Not done yet.
 8. **Apple Developer account.** Not needed for the web app. A native app would need a paid account (about $99/year, to be verified) and cloud builds.
 9. **Silent playback stall.** Playback can get stuck without any event if the mic permission dialog is open when the clip's loop point passes. Mic-first order and a watchdog address it (see section 3).
