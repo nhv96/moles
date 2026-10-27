@@ -1,10 +1,15 @@
-# Checks the app on every push and pull request, and deploys it to GitHub Pages
-# when main changes. The lesson audio comes from content/build (committed).
+# Checks the app on every pull request, and deploys it to GitHub Pages when
+# main changes in a way that affects the app. Docs-only merges do not run.
+# The lesson audio comes from content/build (committed).
 name: Deploy
 
 on:
   push:
     branches: [main]
+    paths:
+      - 'app/**'
+      - 'content/build/**'
+      - '.github/workflows/deploy.yml'
   pull_request:
   workflow_dispatch:
 
