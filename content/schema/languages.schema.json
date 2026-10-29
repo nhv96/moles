@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "languages.schema.json",
+  "title": "Language settings file",
+  "description": "Per language: which engine makes its audio, and the settings that engine needs.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "languages"],
+  "properties": {
+    "schema_version": {
+      "description": "Version of this contract. Always 1.",
+      "const": 1
+    },
+    "languages": {
+      "description": "Settings per language code, for example fr.",
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "pattern": "^[a-z]{2,3}$" },
+      "additionalProperties": { "$ref": "#/$defs/language" }
+    }
+  },
+  "$defs": {
+    "language": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "engine"],
+      "properties": {
+        "name": {
+          "description": "English name of the language, used in the AI prompt.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "engine": {
+          "description": "kokoro makes the audio with the Kokoro model; recording uses the user's own recordings.",
+          "enum": ["kokoro", "recording"]
+        },
+        "voice": {
+          "description": "Kokoro voice name. Only for the kokoro engine.",
+          "type": "string",
+          "minLength": 1
+        },
+        "kokoro_lang_code": {
+          "description": "Kokoro language code, a single letter. Only for the kokoro engine.",
+          "type": "string",
+          "pattern": "^[a-z]$"
+        },
+        "default_speed": {
+          "description": "Speed used when a lesson's tuning file does not set one. Only for engines that have a speed.",
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 1.5
+        },
+        "end_cue": {
+          "description": "Text of the sentence that says a lesson is finished, in this language. Required for a language used as a meaning language.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "engine": { "const": "kokoro" } }, "required": ["engine"] },
+          "then": { "required": ["voice", "kokoro_lang_code", "default_speed"] }
+        },
+        {
+          "if": { "properties": { "engine": { "const": "recording" } }, "required": ["engine"] },
+          "then": {
+            "not": {
+              "anyOf": [{ "required": ["voice"] }, { "required": ["kokoro_lang_code"] }, { "required": ["default_speed"] }]
+            }
+          }
+        }
+      ]
+    }
+  }
+}
