@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "lesson": "lesson-02",
+  "default_speed": 0.9,
+  "meaning_speed": 1.0,
+  "phrase_pause_ms": 400,
+  "sentences": {
+    "s01": { "speed": 0.87, "mode": "phrases", "phrase_pause_ms": 100 },
+    "s03": { "speed": 0.92 }
+  }
+}

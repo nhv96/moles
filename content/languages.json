@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "languages": {
+    "fr": {
+      "name": "French",
+      "engine": "kokoro",
+      "voice": "ff_siwis",
+      "kokoro_lang_code": "f",
+      "default_speed": 0.9
+    },
+    "en": {
+      "name": "English",
+      "engine": "kokoro",
+      "voice": "af_heart",
+      "kokoro_lang_code": "a",
+      "default_speed": 1.0,
+      "end_cue": "The lesson is finished."
+    },
+    "vi": {
+      "name": "Vietnamese",
+      "engine": "recording",
+      "end_cue": "Bài học đã kết thúc."
+    }
+  }
+}

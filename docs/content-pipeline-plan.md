@@ -33,6 +33,8 @@ Language pairs planned: `fr-en` (exists), `en-vi` (English voice from Kokoro, Vi
 | Lesson files | Two files per lesson. `<lesson-id>.json` holds the AI-written text and is locked after approval. `<lesson-id>.tuning.json` holds the user's audio choices. The AI can never overwrite the tuning. | **Decided** |
 | App scope | The app reads a generated `index.json` and loads a chosen lesson with the new field names. A simple picker only, no new screens. | **Decided** |
 | AI contract | A JSON Schema plus a fixed prompt template, both kept in the repo. | **Decided** |
+| Conversation lessons | A lesson is one connected conversation: each sentence answers or continues the previous one. The learner still repeats every line, including the other person's. Each sentence may have a `speaker` (`a` or `b`) and the lesson names the two roles in `speakers`; give both or neither (a monologue like lesson 1 has neither). | **Decided** (2026-10-29) |
+| End cue | The "lesson is finished" sentence is not part of a lesson. Each language that can be a meaning language has one `end_cue` text in `languages.json`, used by all lessons that explain in that language. The AI is told not to write one. | **Decided** (2026-10-29) |
 | Field names | Neutral names (`target`, `meaning`) replace `fr` and `en`. | **Proposed** |
 | Schema version | A `schema_version` field in every file, so scripts and the app refuse files they do not understand. | **Proposed** |
 
@@ -80,21 +82,32 @@ content/
   "persona": "Marc",
   "register": "vous",
   "accent": "France French",
+  "speakers": { "a": "Customer", "b": "Waiter" },
   "sentences": [
     {
       "id": "s01",
-      "target": "Un café, s'il vous plaît.",
-      "meaning": "A coffee, please.",
-      "phrases": ["Un café,", "s'il vous plaît."]
+      "speaker": "a",
+      "target": "Bonjour, je voudrais un café.",
+      "meaning": "Hello, I would like a coffee.",
+      "phrases": ["Bonjour,", "je voudrais un café."]
+    },
+    {
+      "id": "s02",
+      "speaker": "b",
+      "target": "Bien sûr. Autre chose ?",
+      "meaning": "Of course. Anything else?"
     }
-  ],
-  "end_cue": "The lesson is finished."
+  ]
 }
 ```
 
+(Shortened; the full example is `content/schema/examples/lesson-example.json`.)
+
+- The sentences are one conversation in playing order. The learner repeats every one of them.
+- `speakers` (the two roles, written in the meaning language) and `speaker` on each sentence are optional, but all or nothing. `a` is the learner's side and is the persona. Validation of "all or nothing" is done by `validate` (task 3), because the schema alone cannot express it.
 - `phrases` is an optional suggestion from the AI where a natural pause exists. Joined, the pieces must equal `target`, ignoring spaces.
 - `persona`, `register` and `accent` are optional and depend on the language (`register` makes sense for French, less so for English).
-- The file holds no audio settings.
+- The file holds no audio settings and no end cue.
 
 ### Tuning file (written by the user)
 
@@ -122,13 +135,15 @@ A sentence without an entry uses the lesson defaults. `speed` and `mode` are ign
 
 Per language code: display name, engine (`kokoro`, `recording`, or a later TTS engine), voice, Kokoro language code (or the equivalent for other engines), default speed. A recording language has no voice or speed. Settings such as "vous" belong to the lesson, not here.
 
+A language that can be a meaning language also has `end_cue`: the text of the "lesson is finished" sentence in that language (today `en` and `vi`). `validate` requires it for every meaning language used by a lesson. The cue is spoken at the language's default speed (the tuning file belongs to one lesson, so it cannot set it). For a recording language, the user records the cue once.
+
 ### Index (`build/index.json`, generated)
 
 Lists every built pair and lesson: pair, lesson id, title, number of sentences, total duration, and the path to its `manifest.json`. The app reads only this file to find out what exists.
 
 ### Manifest (per lesson, generated)
 
-Same content as today with neutral names: `target`, `meaning`, `target_file`, `meaning_file`, `target_seconds`, `meaning_seconds`, plus `target_lang`, `meaning_lang`, and the voices used.
+Same content as today with neutral names: `target`, `meaning`, `target_file`, `meaning_file`, `target_seconds`, `meaning_seconds`, plus `target_lang`, `meaning_lang`, the voices used, and the optional `speaker` of each sentence. The end cue is built once per meaning language (not once per lesson) and each lesson's manifest points to it.
 
 ## 6. Tasks
 
@@ -142,20 +157,20 @@ Done when: the user approves it, or the requested changes are in.
 ### Task 2: contract (schema, languages, prompt)
 
 - Write `lesson.schema.json`, `tuning.schema.json` and `languages.json`.
-- Write `prompts/generate-lesson.md`. It states the sentence rules from `docs/content-decision.md` (3 to 5 words for a beginner, natural spoken language, real-life situation), the output format, and the schema. It has fill-in parts for pair, topic, persona, level and number of sentences.
+- Write `prompts/generate-lesson.md`. It states the sentence rules from `docs/content-decision.md` (3 to 5 words for a beginner, natural spoken language), the conversation rules (each sentence follows from the previous one, two speakers, no closing sentence), the output format, and the schema. It has fill-in parts for pair, situation, speakers, persona, level and number of sentences.
 
 Done when: a sample AI answer can be checked against the schema by a tool, and the prompt contains everything an AI needs to produce a valid file with no other context.
 
 ### Task 3: `validate` command
 
-Add `validate` to the generator. It checks the schema, unique sentence ids, that `phrases` join back to `target`, that the tuning file only mentions existing sentence ids, and that the languages exist in `languages.json`. Error messages name the file and the sentence.
+Add `validate` to the generator. It checks the schema, unique sentence ids, that `phrases` join back to `target`, that the tuning file only mentions existing sentence ids, that the languages exist in `languages.json` and differ from each other, that `speakers` and `speaker` are given together (all sentences or none), and that the meaning language has an `end_cue`. It also checks that the schema copy inside the prompt equals `lesson.schema.json`. Error messages name the file and the sentence.
 Done when: valid files pass, and each kind of mistake is caught with a clear message (covered by tests).
 
 ### Task 4: migrate lesson 1 and the generator
 
-- Split `lesson-01.json` into the text file and the tuning file under `lessons/fr-en/`, with the new field names. Tuned values stay the same.
+- Split `lesson-01.json` into the text file and the tuning file under `lessons/fr-en/`, with the new field names. Tuned values stay the same. Lesson 1 is a monologue, so it has no `speakers`. Its "lesson is finished" cue moves to `languages.json`.
 - Add the engine layer to the generator. Kokoro is the first engine and reads voices from `languages.json`.
-- Rename manifest fields.
+- Rename manifest fields, and build the end cue once per meaning language.
 - **The audio must not change.** Rebuild `fr-en/lesson-01` and compare the durations and loudness with the current build, before and after.
 
 Done when: the rebuilt lesson 1 matches the current build, within the encoder's normal variation.
@@ -207,3 +222,6 @@ Done when: `sv-en` has a lesson the user judged good enough by listening. Likely
 - **Speeds are per engine and voice.** The 0.85 to 0.92 range was found for Kokoro's French voice. Another engine needs its own sweep and its own defaults in `languages.json`.
 - **Schema changes later.** `schema_version` is in from the start. The migration approach for old lessons is not decided and is not needed until the first schema change.
 - **Where the generator's name goes.** `generate_kokoro.py` stops being a good name once other engines exist. Renaming is part of task 4 and has not been decided.
+- **Voices for the two speakers.** In a conversation, both speakers use the same voice for now (Kokoro has only one French voice). The `speaker` field is recorded so that a second voice, or showing who speaks, can be added later without changing the lesson files.
+- **Vietnamese end cue.** `languages.json` has the text "Bài học đã kết thúc." as a proposal; the user, as the Vietnamese speaker, confirms or changes the wording before recording it. French has no `end_cue` yet, because it is not planned as a meaning language.
+- **Where the shared cue audio is stored.** One cue per meaning language, built once. The exact path in `build/` and how the app finds it (through `index.json` or each manifest) is decided in task 5.

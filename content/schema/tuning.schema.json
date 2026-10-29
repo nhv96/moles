@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tuning.schema.json",
+  "title": "Lesson tuning file",
+  "description": "The audio choices for one lesson, written by the user after listening. Everything except schema_version and lesson is optional; missing values fall back to the language defaults in languages.json, then to 400 ms for pauses. Speed and mode do not apply to a language whose engine is recording.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "lesson"],
+  "properties": {
+    "schema_version": {
+      "description": "Version of this contract. Always 1.",
+      "const": 1
+    },
+    "lesson": {
+      "description": "Id of the lesson this file tunes, for example lesson-01.",
+      "type": "string",
+      "pattern": "^lesson-[0-9]{2,}$"
+    },
+    "default_speed": {
+      "description": "Speed of the target language voice for sentences without their own speed.",
+      "$ref": "#/$defs/speed"
+    },
+    "meaning_speed": {
+      "description": "Speed of the meaning language voice, for all sentences.",
+      "$ref": "#/$defs/speed"
+    },
+    "phrase_pause_ms": {
+      "description": "Silence between the pieces of a sentence in phrases mode, for sentences without their own value.",
+      "$ref": "#/$defs/pause_ms"
+    },
+    "sentences": {
+      "description": "Settings for single sentences, keyed by sentence id.",
+      "type": "object",
+      "propertyNames": { "pattern": "^s[0-9]{2,}$" },
+      "additionalProperties": { "$ref": "#/$defs/sentence_tuning" }
+    }
+  },
+  "$defs": {
+    "speed": {
+      "type": "number",
+      "minimum": 0.5,
+      "maximum": 1.5
+    },
+    "pause_ms": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 3000
+    },
+    "sentence_tuning": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "speed": { "$ref": "#/$defs/speed" },
+        "mode": {
+          "description": "whole (default) plays the sentence in one piece; phrases plays the pieces from `phrases` in the lesson file, joined with a pause.",
+          "enum": ["whole", "phrases"]
+        },
+        "phrase_pause_ms": { "$ref": "#/$defs/pause_ms" }
+      }
+    }
+  }
+}

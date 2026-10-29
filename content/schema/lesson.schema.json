@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "lesson.schema.json",
+  "title": "Lesson text file",
+  "description": "The text of one lesson, a short conversation written by an AI and approved by the user. It holds no audio settings (speed, pauses); those live in the tuning file.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "id", "target_lang", "meaning_lang", "title", "sentences"],
+  "properties": {
+    "schema_version": {
+      "description": "Version of this contract. Always 1.",
+      "const": 1
+    },
+    "id": {
+      "description": "Lesson id, also the file name without .json.",
+      "type": "string",
+      "pattern": "^lesson-[0-9]{2,}$"
+    },
+    "target_lang": {
+      "description": "Language code of the language being learned (the sentences in `target`), for example fr.",
+      "type": "string",
+      "pattern": "^[a-z]{2,3}$"
+    },
+    "meaning_lang": {
+      "description": "Language code of the explanation language (the sentences in `meaning`), for example en. Must differ from target_lang.",
+      "type": "string",
+      "pattern": "^[a-z]{2,3}$"
+    },
+    "title": {
+      "description": "Short title of the lesson, written in the meaning language.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+    },
+    "persona": {
+      "description": "Optional. First name of the made-up person the learner stands in for (speaker a, if the sentences have speakers).",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40
+    },
+    "speakers": {
+      "description": "Optional. The two roles of a conversation, written in the meaning language, for example a = Customer and b = Seller. Present if and only if the sentences have a `speaker`.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["a", "b"],
+      "properties": {
+        "a": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "b": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        }
+      }
+    },
+    "register": {
+      "description": "Optional. Level of politeness of the target language, for example vous or tu in French. Only for languages that have the distinction.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40
+    },
+    "accent": {
+      "description": "Optional. Regional variety of the target language, for example France French.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40
+    },
+    "sentences": {
+      "description": "The sentences of the lesson, in the order they are played.",
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 30,
+      "items": { "$ref": "#/$defs/sentence" }
+    }
+  },
+  "$defs": {
+    "sentence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "target",
+        "meaning"
+      ],
+      "properties": {
+        "id": {
+          "description": "Sentence id, unique in the lesson: s01, s02, ...",
+          "type": "string",
+          "pattern": "^s[0-9]{2,}$"
+        },
+        "speaker": {
+          "description": "Optional. Who says the sentence: a or b, as named in `speakers`. Give it to every sentence or to none.",
+          "enum": [
+            "a",
+            "b"
+          ]
+        },
+        "target": {
+          "description": "The sentence in the language being learned, as it is spoken.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "meaning": {
+          "description": "The same sentence in the meaning language, natural rather than word for word.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "phrases": {
+          "description": "Optional. A suggestion for splitting `target` at natural pauses. Joined together (ignoring spaces) the pieces must equal `target` exactly.",
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 4,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}
