@@ -168,6 +168,8 @@ Done when: valid files pass, and each kind of mistake is caught with a clear mes
 
 **Where it lives.** The checks are in `content/scripts/contract.py` (no audio code, so it is fast and testable), and `validate` in `generate_kokoro.py` calls it. `languages.json` also got a schema, `schema/languages.schema.json`. Tests are in `content/tests/` (run `uv run pytest` in `content/`). Warnings (a speed or mode set for a recorded language) do not fail the command; errors exit with 1. When a file fails its schema, only the schema errors are listed for it, and the other rules run after they are fixed. The old `lessons/lesson-01.json` is not checked until task 4 migrates it.
 
+**CI (added 2026-10-29).** `.github/workflows/content.yml` runs the tests and `validate` on every pull request and on pushes to `main` that touch `content/`. It installs only the `dev` dependency group; `kokoro` and `soundfile` moved to an `audio` group (installed by default locally), so CI does not download PyTorch. The workflow pins `astral-sh/setup-uv@v10.3.3` exactly, because that project has no floating major tag.
+
 ### Task 4: migrate lesson 1 and the generator
 
 - Split `lesson-01.json` into the text file and the tuning file under `lessons/fr-en/`, with the new field names. Tuned values stay the same. Lesson 1 is a monologue, so it has no `speakers`. Its "lesson is finished" cue moves to `languages.json`.
