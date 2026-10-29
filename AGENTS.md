@@ -23,4 +23,4 @@ Rules:
 - Test a feature with the tunnel before merging. Do not use `main` and the deployed app as the test bed.
 - Things that only behave right when installed (screen locked, home-screen app, long runs) get a final check on the deployed app after the merge.
 - Every pull request runs lint, format check, tests and the build. Run `npm run lint`, `npm run format:check` and `npm test` in `app/` before asking the user to commit.
-- Every pull request also runs the content checks (`.github/workflows/content.yml`). When `content/` changes, run `uv run pytest` and `uv run scripts/generate_kokoro.py validate` in `content/` before asking the user to commit.
+- Every pull request also runs the content checks (`.github/workflows/content.yml`). When `content/` changes, run `uv run pytest` and `uv run scripts/pipeline.py validate` in `content/` before asking the user to commit.

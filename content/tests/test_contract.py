@@ -1,54 +1,11 @@
-import copy
-import json
-import shutil
 import sys
 from pathlib import Path
 
 import pytest
 
-import generate_kokoro
+import pipeline
 from contract import validate_content
-
-CONTENT = Path(__file__).resolve().parent.parent
-EXAMPLES = CONTENT / "schema" / "examples"
-
-
-def load(path: Path):
-    return json.loads(path.read_text(encoding="utf-8"))
-
-
-@pytest.fixture
-def root(tmp_path: Path) -> Path:
-    """A small content folder: the real schemas, languages and prompt, and no lessons."""
-    for name in ("schema/lesson.schema.json", "schema/tuning.schema.json", "schema/languages.schema.json",
-                 "languages.json", "prompts/generate-lesson.md"):
-        target = tmp_path / name
-        target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy(CONTENT / name, target)
-    return tmp_path
-
-
-def write(root: Path, rel: str, doc) -> Path:
-    path = root / rel
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(doc if isinstance(doc, str) else json.dumps(doc, ensure_ascii=False), encoding="utf-8")
-    return path
-
-
-def lesson(**changes) -> dict:
-    doc = copy.deepcopy(load(EXAMPLES / "lesson-example.json"))
-    doc.update(changes)
-    return doc
-
-
-def tuning(**changes) -> dict:
-    doc = copy.deepcopy(load(EXAMPLES / "tuning-example.json"))
-    doc.update(changes)
-    return doc
-
-
-LESSON = "lessons/fr-en/lesson-02.json"
-TUNING = "lessons/fr-en/lesson-02.tuning.json"
+from helpers import CONTENT, LESSON, TUNING, lesson, load, tuning, write
 
 
 def run(root: Path, lesson_doc=None, tuning_doc=None):
@@ -283,12 +240,12 @@ def test_missing_schema_file_is_reported(root):
 
 def test_command_exit_code_and_output(root, capsys, monkeypatch):
     run(root)
-    monkeypatch.setattr(sys, "argv", ["generate_kokoro.py", "validate", "--content-dir", str(root)])
-    generate_kokoro.main()
+    monkeypatch.setattr(sys, "argv", ["pipeline.py", "validate", "--content-dir", str(root)])
+    pipeline.main()
     assert "1 lesson file(s) checked: 0 error(s), 0 warning(s)" in capsys.readouterr().out
 
     write(root, LESSON, lesson(meaning_lang="fr"))
     with pytest.raises(SystemExit) as exit_info:
-        generate_kokoro.main()
+        pipeline.main()
     assert exit_info.value.code == 1
     assert "error:" in capsys.readouterr().out

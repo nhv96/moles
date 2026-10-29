@@ -18,7 +18,7 @@ A mobile-friendly app for learning spoken French by *shadowing*: you hear a sent
 - Sentences always play in the same order. No daily refresh and no spaced repetition yet.
 - The French audio is generated speech (Kokoro, see section 3). Speed, phrase breaks and pause length are set per sentence and chosen by listening. No human recordings for now.
 - The meaning is spoken in English (the user's chosen language), at a steady pace, with no "it means..." prefix. The earlier target of about 5 seconds assumed longer sentences; with short sentences the meanings are shorter. **To be confirmed.**
-- The lesson text and settings are in `content/lessons/lesson-01.json`. The reasoning is in `docs/content-decision.md`.
+- The lesson text is in `content/lessons/fr-en/lesson-01.json` and its audio settings in `lesson-01.tuning.json`. The reasoning is in `docs/content-decision.md`.
 
 ### Per-sentence loop (Decided)
 1. The French sentence plays.
@@ -53,7 +53,7 @@ Replaying the French after the meaning (revisit after real use), build-up practi
 - **Web app (PWA)** opened on the iPhone, with no native app for the MVP. Reasons: you develop on Linux and have no Mac, and you have never built a mobile app.
 - **TypeScript** for the app (you have used it before).
 - **Static hosting over HTTPS.** HTTPS is required for microphone access on iPhone. Options: GitHub Pages, Cloudflare Pages or Netlify, or a temporary tunnel (`cloudflared`) during development.
-- **Lesson content:** the sentences are written for the app, and the audio is generated with **Kokoro** (open text-to-speech model, Apache 2.0): French voice `ff_siwis`, English voice `af_heart`. A Python script (`content/scripts/generate_kokoro.py`, managed with `uv`, Python 3.13) builds one French and one English audio file per sentence plus a `manifest.json`. Open corpora (Tatoeba, Common Voice, Lingua Libre) were rejected; the reasons are in `docs/content-decision.md`.
+- **Lesson content:** the sentences are written for the app, and the audio is generated with **Kokoro** (open text-to-speech model, Apache 2.0): French voice `ff_siwis`, English voice `af_heart`. A Python script (`content/scripts/pipeline.py`, managed with `uv`, Python 3.13) builds one French and one English audio file per sentence plus a `manifest.json`. Open corpora (Tatoeba, Common Voice, Lingua Libre) were rejected; the reasons are in `docs/content-decision.md`.
 - **Go for the content pipeline** (fetching sentences, cutting audio, generating lesson files): *superseded for MVP v1.* The pipeline no longer fetches sentences or cuts audio, and the generator is the Python script above. See Open.
 
 ### Proposed
