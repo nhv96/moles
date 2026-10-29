@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "id": "lesson-02",
+  "target_lang": "fr",
+  "meaning_lang": "en",
+  "title": "Order a coffee",
+  "persona": "Marc",
+  "register": "vous",
+  "accent": "France French",
+  "speakers": { "a": "Customer", "b": "Waiter" },
+  "sentences": [
+    {
+      "id": "s01",
+      "speaker": "a",
+      "target": "Bonjour, je voudrais un café.",
+      "meaning": "Hello, I would like a coffee.",
+      "phrases": ["Bonjour,", "je voudrais un café."]
+    },
+    {
+      "id": "s02",
+      "speaker": "b",
+      "target": "Bien sûr. Autre chose ?",
+      "meaning": "Of course. Anything else?"
+    },
+    {
+      "id": "s03",
+      "speaker": "a",
+      "target": "Oui, un croissant, s'il vous plaît.",
+      "meaning": "Yes, a croissant, please.",
+      "phrases": ["Oui, un croissant,", "s'il vous plaît."]
+    },
+    {
+      "id": "s04",
+      "speaker": "b",
+      "target": "Voilà. Ça fait trois euros.",
+      "meaning": "Here you are. That is three euros."
+    },
+    {
+      "id": "s05",
+      "speaker": "a",
+      "target": "Je peux payer par carte ?",
+      "meaning": "Can I pay by card?"
+    }
+  ]
+}
