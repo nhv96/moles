@@ -34,6 +34,12 @@ uv run scripts/generate_kokoro.py validate     # lessons, languages.json and the
 uv run pytest                                  # tests of the checks
 ```
 
+Pull requests run both automatically (workflow `.github/workflows/content.yml`). CI installs only
+what the tests need, without Kokoro and PyTorch, because the audio libraries are a separate
+dependency group in `pyproject.toml`. To work the same way locally:
+`uv sync --no-default-groups --group dev`, then `uv run --no-default-groups --group dev pytest`.
+A plain `uv sync` still installs everything.
+
 `validate` makes no audio. It checks the files against the contract in `schema/` (see
 `../docs/content-pipeline-plan.md`) and prints each problem with the file and the sentence. It exits
 with 1 if there is an error; warnings (for example a speed set for a recorded language) do not fail it.

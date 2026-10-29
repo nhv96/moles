@@ -1,0 +1,36 @@
+# Checks the content pipeline (lesson contract, validate command) on every pull request, and on
+# pushes to main that touch content/. It installs only what the tests need, not Kokoro or PyTorch.
+name: Content
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'content/**'
+      - '.github/workflows/content.yml'
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: content-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: content
+    steps:
+      - uses: actions/checkout@v4
+      # setup-uv publishes no floating major tag, so the exact release is pinned.
+      - uses: astral-sh/setup-uv@v10.3.3
+        with:
+          enable-cache: true
+          cache-dependency-glob: content/uv.lock
+      # Python 3.13 comes from content/.python-version. The audio group is left out.
+      - run: uv sync --frozen --no-default-groups --group dev
+      - run: uv run --frozen --no-default-groups --group dev pytest
+      - run: uv run --frozen --no-default-groups --group dev scripts/generate_kokoro.py validate
