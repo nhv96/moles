@@ -1,6 +1,10 @@
 """Generate Kokoro TTS audio for a lesson file.
 
-Two commands (run from the content/ folder):
+Three commands (run from the content/ folder):
+
+  validate  Check languages.json, the lesson files in lessons/<pair>/ and the AI prompt against the
+          contract in schema/. Makes no audio. Exits with 1 if anything is wrong.
+              uv run scripts/generate_kokoro.py validate
 
   sweep   Listening test. For every sentence, make the French audio at several speeds
           (and, for sentences that define "phrases", also a phrase-by-phrase version).
@@ -266,6 +270,22 @@ def write_review_sheet(path: Path, lesson: dict, files: dict[str, list[tuple[str
     path.write_text("\n".join(lines), encoding="utf-8")
 
 
+# --------------------------------------------------------------------------- validate
+
+
+def cmd_validate(args) -> None:
+    from contract import validate_content  # no audio code, so it loads at once
+
+    report = validate_content(args.content_dir)
+    for line in report.errors:
+        print(f"error:   {line}")
+    for line in report.warnings:
+        print(f"warning: {line}")
+    print(f"{len(report.checked)} lesson file(s) checked: {len(report.errors)} error(s), {len(report.warnings)} warning(s)")
+    if report.errors:
+        raise SystemExit(1)
+
+
 # --------------------------------------------------------------------------- cli
 
 
@@ -287,6 +307,10 @@ def build_parser() -> argparse.ArgumentParser:
     build.add_argument("--out", default="build", type=Path)
     build.add_argument("--bitrate", default=DEFAULT_BITRATE_KBPS, type=int, help="AAC bitrate in kbps")
     build.set_defaults(func=cmd_build)
+
+    validate = sub.add_parser("validate", help="check the lesson files, languages and prompt against the contract")
+    validate.add_argument("--content-dir", default=Path(__file__).resolve().parent.parent, type=Path)
+    validate.set_defaults(func=cmd_validate)
     return parser
 
 

@@ -27,6 +27,19 @@ cd content
 uv sync --managed-python
 ```
 
+## Checking lesson files
+
+```bash
+uv run scripts/generate_kokoro.py validate     # lessons, languages.json and the AI prompt
+uv run pytest                                  # tests of the checks
+```
+
+`validate` makes no audio. It checks the files against the contract in `schema/` (see
+`../docs/content-pipeline-plan.md`) and prints each problem with the file and the sentence. It exits
+with 1 if there is an error; warnings (for example a speed set for a recorded language) do not fail it.
+It looks at the new layout, `lessons/<pair>/<lesson-id>.json` with an optional `.tuning.json` next to
+it. The old `lessons/lesson-01.json` used by the commands below is not checked until it is migrated.
+
 ## Workflow
 
 1. **Sweep:** make every sentence at several speeds, plus phrase-by-phrase versions where defined.

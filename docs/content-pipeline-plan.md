@@ -166,6 +166,8 @@ Done when: a sample AI answer can be checked against the schema by a tool, and t
 Add `validate` to the generator. It checks the schema, unique sentence ids, that `phrases` join back to `target`, that the tuning file only mentions existing sentence ids, that the languages exist in `languages.json` and differ from each other, that `speakers` and `speaker` are given together (all sentences or none), and that the meaning language has an `end_cue`. It also checks that the schema copy inside the prompt equals `lesson.schema.json`. Error messages name the file and the sentence.
 Done when: valid files pass, and each kind of mistake is caught with a clear message (covered by tests).
 
+**Where it lives.** The checks are in `content/scripts/contract.py` (no audio code, so it is fast and testable), and `validate` in `generate_kokoro.py` calls it. `languages.json` also got a schema, `schema/languages.schema.json`. Tests are in `content/tests/` (run `uv run pytest` in `content/`). Warnings (a speed or mode set for a recorded language) do not fail the command; errors exit with 1. When a file fails its schema, only the schema errors are listed for it, and the other rules run after they are fixed. The old `lessons/lesson-01.json` is not checked until task 4 migrates it.
+
 ### Task 4: migrate lesson 1 and the generator
 
 - Split `lesson-01.json` into the text file and the tuning file under `lessons/fr-en/`, with the new field names. Tuned values stay the same. Lesson 1 is a monologue, so it has no `speakers`. Its "lesson is finished" cue moves to `languages.json`.
