@@ -1,5 +1,5 @@
 # Checks the content pipeline (lesson contract, validate command) on every pull request, and on
-# pushes to main that touch content/. It installs only what the tests need, not Kokoro or PyTorch.
+# pushes to main that touch content/. It installs only what the tests need, not Kokoro or PyTorch (the tests use a fake voice).
 name: Content
 
 on:
@@ -30,7 +30,10 @@ jobs:
         with:
           enable-cache: true
           cache-dependency-glob: content/uv.lock
-      # Python 3.13 comes from content/.python-version. The audio group is left out.
+      # The build tests encode audio with ffmpeg; the runner image may already have it.
+      - run: command -v ffmpeg ffprobe || (sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg)
+        working-directory: .
+      # Python 3.13 comes from content/.python-version. The Kokoro group is left out.
       - run: uv sync --frozen --no-default-groups --group dev
       - run: uv run --frozen --no-default-groups --group dev pytest
-      - run: uv run --frozen --no-default-groups --group dev scripts/generate_kokoro.py validate
+      - run: uv run --frozen --no-default-groups --group dev scripts/pipeline.py validate

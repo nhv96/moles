@@ -179,10 +179,17 @@ Done when: valid files pass, and each kind of mistake is caught with a clear mes
 
 Done when: the rebuilt lesson 1 matches the current build, within the encoder's normal variation.
 
+**Decisions on 2026-10-29.** The committed `content/build/lesson-01/` is **not** touched in this task, because the deployed app reads its old manifest format; the new layout is committed together with `sync-content` and the app (tasks 5 and 6). The script is renamed `pipeline.py`. `sweep` and `build` take the lesson as `fr-en/lesson-01`, take voices from `languages.json`, and run the same checks as `validate` first.
+
+**Result (2026-10-29).** Code is split into `pipeline.py` (command line), `contract.py` (checks), `lesson.py` (loading and settings), `engines.py` (Kokoro engine; recording raises a clear message), `render.py` (sweep and build) and `audio.py` (trim, loudness, encoding). `soundfile` moved to the main dependencies so the tests can write audio without Kokoro. Lesson 1 was migrated by a script that checked every sentence, speed, mode and pause against the old file. New output: `build/<pair>/<lesson>/sNN_target.m4a`, `sNN_meaning.m4a`, `manifest.json` with the neutral field names and `schema_version`, and the end cue in `build/cues/<lang>.m4a`; the manifest's `end_cue.file` is relative to the build folder. The title became "Introduce yourself" with the persona "Marc" in its own field.
+
+**How "the audio must not change" was checked.** Kokoro is not repeatable: two runs of the old code on the same machine differ in the samples (differences up to 1.1 in amplitude), because its voice generator uses random noise. So files cannot be compared by hash. Instead: duration, integrated loudness, peak and the correlation of the loudness over time (20 ms windows). Between two runs of the old code the worst case was 0.006 s, 0.10 LU, 0.3 dB and a correlation of 0.988. The new pipeline against the committed build: 0.004 s, 0.10 LU, 0.2 dB, correlation 0.998, for all 17 clips. That is within the noise, so the audio is unchanged. The comparison script was a throwaway in the scratchpad; the idea is kept in `content/README.md`.
+
 ### Task 5: index and `sync-content`
 
 - `build` writes `build/index.json`.
 - `sync-content` copies per pair and fails with a clear message if the index or a listed file is missing.
+- Move the committed build to the new layout (`build/<pair>/<lesson>/`, `build/cues/`), update `.gitignore` for it, and update the error message in `app/scripts/sync-content.mjs`, which still names the old script.
 - After `build`, a check that every file in the manifest exists, no clip is empty and durations are plausible.
 
 Done when: a clean build and sync produces a working `public/lessons` folder, and a missing file is reported by name.
@@ -225,7 +232,6 @@ Done when: `sv-en` has a lesson the user judged good enough by listening. Likely
 - **Phrase mode and non-French languages.** The phrase-split idea was tested only with French. Whether it works the same for Swedish is unknown. Recorded languages are whole-sentence only.
 - **Speeds are per engine and voice.** The 0.85 to 0.92 range was found for Kokoro's French voice. Another engine needs its own sweep and its own defaults in `languages.json`.
 - **Schema changes later.** `schema_version` is in from the start. The migration approach for old lessons is not decided and is not needed until the first schema change.
-- **Where the generator's name goes.** `generate_kokoro.py` stops being a good name once other engines exist. Renaming is part of task 4 and has not been decided.
 - **Voices for the two speakers.** In a conversation, both speakers use the same voice for now (Kokoro has only one French voice). The `speaker` field is recorded so that a second voice, or showing who speaks, can be added later without changing the lesson files.
 - **Vietnamese end cue.** `languages.json` has the text "Bài học đã kết thúc." as a proposal; the user, as the Vietnamese speaker, confirms or changes the wording before recording it. French has no `end_cue` yet, because it is not planned as a meaning language.
 - **Where the shared cue audio is stored.** One cue per meaning language, built once. The exact path in `build/` and how the app finds it (through `index.json` or each manifest) is decided in task 5.

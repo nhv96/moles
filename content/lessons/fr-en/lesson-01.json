@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "id": "lesson-01",
+  "target_lang": "fr",
+  "meaning_lang": "en",
+  "title": "Introduce yourself",
+  "persona": "Marc",
+  "register": "vous",
+  "accent": "France French",
+  "sentences": [
+    {
+      "id": "s01",
+      "target": "Bonjour, je m'appelle Marc.",
+      "meaning": "Hello, my name is Marc.",
+      "phrases": ["Bonjour,", "je m'appelle Marc."]
+    },
+    {
+      "id": "s02",
+      "target": "Je suis italien.",
+      "meaning": "I am Italian."
+    },
+    {
+      "id": "s03",
+      "target": "J'habite en Belgique.",
+      "meaning": "I live in Belgium."
+    },
+    {
+      "id": "s04",
+      "target": "Je travaille ici.",
+      "meaning": "I work here."
+    },
+    {
+      "id": "s05",
+      "target": "Je parle un peu français.",
+      "meaning": "I speak a little French."
+    },
+    {
+      "id": "s06",
+      "target": "J'apprends le français.",
+      "meaning": "I am learning French."
+    },
+    {
+      "id": "s07",
+      "target": "Et vous, comment vous appelez-vous ?",
+      "meaning": "And you, what is your name?",
+      "phrases": ["Et vous,", "comment vous appelez-vous ?"]
+    },
+    {
+      "id": "s08",
+      "target": "Plus lentement, s'il vous plaît.",
+      "meaning": "More slowly, please.",
+      "phrases": ["Plus lentement,", "s'il vous plaît."]
+    }
+  ]
+}

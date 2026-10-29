@@ -35,7 +35,7 @@ The French is written by Claude and has **not** been reviewed by a native speake
 
 Closing cue: "The lesson is finished."
 
-The source of truth for these values is `content/lessons/lesson-01.json`; this table may lag behind it.
+The source of truth for these values is `content/lessons/fr-en/lesson-01.json` (text) and `lesson-01.tuning.json` (speeds, modes, pauses); this table may lag behind them.
 
 ## What listening tests showed
 
@@ -47,9 +47,12 @@ The source of truth for these values is `content/lessons/lesson-01.json`; this t
 
 ## Pipeline (Python, in the repo)
 
-- `lessons/lesson-01.json`: text, meaning, per-sentence `speed`, `mode`, `phrases`, `phrase_pause_ms`.
-- `scripts/generate_kokoro.py sweep`: listening test at several speeds, plus phrase versions.
-- `scripts/generate_kokoro.py build`: final files per sentence (French and English), the finished cue, and `manifest.json`. Edge silence is trimmed so the app controls all pauses.
+(Reorganised on 2026-10-29 for several languages; see `docs/content-pipeline-plan.md`. The decisions above still hold.)
+
+- `lessons/fr-en/lesson-01.json`: text, meaning and suggested `phrases`. `lessons/fr-en/lesson-01.tuning.json`: per-sentence `speed`, `mode`, `phrase_pause_ms`.
+- `scripts/pipeline.py validate`: checks the lesson files against the contract.
+- `scripts/pipeline.py sweep`: listening test at several speeds, plus phrase versions.
+- `scripts/pipeline.py build`: final files per sentence (French and English), the finished cue (once per explanation language), and `manifest.json`. Edge silence is trimmed so the app controls all pauses.
 - Dependencies via `uv` (Python 3.13, `uv.lock` committed); `espeak-ng` installed with apt.
 
 ## Still open

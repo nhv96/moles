@@ -1,19 +1,19 @@
 [project]
 name = "moles-content"
 version = "0.1.0"
-description = "Kokoro TTS test: generate French sentence audio and English meanings for review"
+description = "Content pipeline: validate lesson files and build lesson audio"
 requires-python = ">=3.10"
 dependencies = [
     "numpy",
+    "soundfile",
     "jsonschema>=4.26.0",
 ]
 
 [dependency-groups]
-# The audio libraries are large (Kokoro brings PyTorch). They are a separate group so that CI can
-# run the tests without them: `uv sync --no-default-groups --group dev`.
+# Kokoro is large (it brings PyTorch). It is a separate group so that CI can run the tests
+# without it: `uv sync --no-default-groups --group dev`.
 audio = [
     "kokoro>=0.9",
-    "soundfile",
 ]
 dev = [
     "pytest>=9.2.0",

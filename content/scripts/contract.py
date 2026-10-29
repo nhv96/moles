@@ -2,7 +2,7 @@
 
 The contract is the JSON Schemas in schema/ plus the rules a schema cannot express (see
 check_lesson and check_tuning). This module has no audio or Kokoro code, so it is fast and
-testable. It is used by the "validate" command of generate_kokoro.py.
+testable. It is used by the "validate" command of pipeline.py, and by lesson.py before any audio is made.
 
 What is checked, starting from the content folder:
   languages.json                         against schema/languages.schema.json
@@ -39,6 +39,10 @@ class Report:
 
     def warn(self, where: str, message: str) -> None:
         self.warnings.append(f"{where}: {message}")
+
+    def errors_in(self, *files: str) -> list[str]:
+        """The errors that belong to the given files (paths as used in the messages)."""
+        return [e for e in self.errors if any(e.startswith(f"{f}:") for f in files)]
 
 
 # --------------------------------------------------------------------------- helpers
