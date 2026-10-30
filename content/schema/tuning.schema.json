@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "tuning.schema.json",
   "title": "Lesson tuning file",
-  "description": "The audio choices for one lesson, written by the user after listening. Everything except schema_version and lesson is optional; missing values fall back to the language defaults in languages.json, then to 400 ms for pauses. Speed and mode do not apply to a language whose engine is recording.",
+  "description": "The audio choices for one lesson, written by the user after listening. Everything except schema_version and lesson is optional; missing values fall back to the language defaults in languages.json, then to 100 ms for pauses. Speed and mode do not apply to a language whose engine is recording.",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema_version", "lesson"],

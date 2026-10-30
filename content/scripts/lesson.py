@@ -14,7 +14,7 @@ from pathlib import Path
 
 from contract import TUNING_SUFFIX, validate_content
 
-DEFAULT_PHRASE_PAUSE_MS = 400
+DEFAULT_PHRASE_PAUSE_MS = 100
 FALLBACK_SPEED = 1.0  # for an engine that has no default_speed
 KEY_PATTERN = re.compile(r"^[a-z]{2,3}-[a-z]{2,3}/lesson-[0-9]{2,}$")
 

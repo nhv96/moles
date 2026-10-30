@@ -1,0 +1,120 @@
+{
+  "schema_version": 1,
+  "lesson": "lesson-02",
+  "pair": "fr-en",
+  "target_lang": "fr",
+  "meaning_lang": "en",
+  "title": "Buying fruit at a market",
+  "speakers": {
+    "a": "Customer",
+    "b": "Seller"
+  },
+  "target_voice": "ff_siwis",
+  "meaning_voice": "af_heart",
+  "format": "aac-m4a",
+  "bitrate_kbps": 96,
+  "loudness_lufs": -16.0,
+  "items": [
+    {
+      "id": "s01",
+      "speaker": "a",
+      "target": "Bonjour madame.",
+      "meaning": "Hello madam.",
+      "speed": 0.9,
+      "mode": "whole",
+      "target_file": "s01_target.m4a",
+      "meaning_file": "s01_meaning.m4a",
+      "target_seconds": 1.24,
+      "meaning_seconds": 1.7
+    },
+    {
+      "id": "s02",
+      "speaker": "b",
+      "target": "Bonjour monsieur.",
+      "meaning": "Hello sir.",
+      "speed": 0.9,
+      "mode": "whole",
+      "target_file": "s02_target.m4a",
+      "meaning_file": "s02_meaning.m4a",
+      "target_seconds": 1.19,
+      "meaning_seconds": 1.62
+    },
+    {
+      "id": "s03",
+      "speaker": "a",
+      "target": "Je voudrais des pommes.",
+      "meaning": "I would like some apples.",
+      "speed": 0.85,
+      "mode": "whole",
+      "target_file": "s03_target.m4a",
+      "meaning_file": "s03_meaning.m4a",
+      "target_seconds": 1.45,
+      "meaning_seconds": 2.0
+    },
+    {
+      "id": "s04",
+      "speaker": "b",
+      "target": "Combien de kilos ?",
+      "meaning": "How many kilos?",
+      "speed": 0.85,
+      "mode": "whole",
+      "target_file": "s04_target.m4a",
+      "meaning_file": "s04_meaning.m4a",
+      "target_seconds": 1.34,
+      "meaning_seconds": 1.82
+    },
+    {
+      "id": "s05",
+      "speaker": "a",
+      "target": "Un kilo, s'il vous plaît.",
+      "meaning": "One kilo, please.",
+      "speed": 0.9,
+      "mode": "phrases",
+      "target_file": "s05_target.m4a",
+      "meaning_file": "s05_meaning.m4a",
+      "target_seconds": 1.85,
+      "meaning_seconds": 2.05
+    },
+    {
+      "id": "s06",
+      "speaker": "b",
+      "target": "Voilà. Autre chose ?",
+      "meaning": "Here you are. Anything else?",
+      "speed": 0.9,
+      "mode": "phrases",
+      "target_file": "s06_target.m4a",
+      "meaning_file": "s06_meaning.m4a",
+      "target_seconds": 1.8,
+      "meaning_seconds": 2.25
+    },
+    {
+      "id": "s07",
+      "speaker": "a",
+      "target": "Non, c'est tout.",
+      "meaning": "No, that is all.",
+      "speed": 0.95,
+      "mode": "phrases",
+      "target_file": "s07_target.m4a",
+      "meaning_file": "s07_meaning.m4a",
+      "target_seconds": 1.39,
+      "meaning_seconds": 1.77
+    },
+    {
+      "id": "s08",
+      "speaker": "b",
+      "target": "Ça fait trois euros.",
+      "meaning": "That is three euros.",
+      "speed": 0.88,
+      "mode": "whole",
+      "target_file": "s08_target.m4a",
+      "meaning_file": "s08_meaning.m4a",
+      "target_seconds": 1.35,
+      "meaning_seconds": 1.98
+    }
+  ],
+  "end_cue": {
+    "text": "The lesson is finished.",
+    "file": "cues/en.m4a",
+    "seconds": 2.02
+  }
+}

@@ -17,6 +17,16 @@
       "sentences": 8,
       "seconds": 29.27,
       "manifest": "fr-en/lesson-01/manifest.json"
+    },
+    {
+      "pair": "fr-en",
+      "lesson": "lesson-02",
+      "title": "Buying fruit at a market",
+      "target_lang": "fr",
+      "meaning_lang": "en",
+      "sentences": 8,
+      "seconds": 26.8,
+      "manifest": "fr-en/lesson-02/manifest.json"
     }
   ]
 }

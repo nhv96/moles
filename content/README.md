@@ -82,7 +82,7 @@ A lesson is named by its pair and id, for example `fr-en/lesson-01`.
      `default_speed` in `languages.json`.
    - `mode`: `"whole"` (default) or `"phrases"`. The pieces come from `phrases` in the lesson file;
      joined, they must equal `target` (`validate` checks this).
-   - `phrase_pause_ms`: silence between the pieces, in milliseconds. Tune it by ear.
+   - `phrase_pause_ms`: silence between the pieces, in milliseconds (100 if you set nothing). Tune it by ear.
    - `meaning_speed`: the speed of the explanation voice.
 
 5. **Build** the final files with the chosen settings:
