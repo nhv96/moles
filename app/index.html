@@ -37,13 +37,13 @@
         text-align: center;
         margin: 16px 0;
       }
-      #french {
+      #target {
         font-size: 28px;
         font-weight: bold;
         text-align: center;
         min-height: 3.5em;
       }
-      #english {
+      #meaning {
         font-size: 20px;
         color: #93c5fd;
         text-align: center;
@@ -77,6 +77,34 @@
       #controls button {
         margin: 0;
       }
+      select {
+        font-size: 18px;
+        padding: 10px;
+        width: 100%;
+        border-radius: 12px;
+        border: 0;
+        background: #1f2937;
+        color: #eee;
+        margin-top: 4px;
+      }
+      #picker {
+        margin-bottom: 8px;
+      }
+      #lessons button {
+        background: #1f2937;
+        text-align: left;
+        font-size: 18px;
+        padding: 12px 16px;
+        margin: 8px 0 0;
+      }
+      #lessons button[aria-checked='true'] {
+        background: #1d4ed8;
+      }
+      #lessons small {
+        display: block;
+        color: #9ca3af;
+        font-size: 14px;
+      }
       label {
         display: block;
         font-size: 14px;
@@ -102,10 +130,15 @@
   </head>
   <body>
     <div id="app">
+      <div id="picker" hidden>
+        <label for="pair">Language pair</label>
+        <select id="pair"></select>
+        <div id="lessons" role="radiogroup" aria-label="Lesson"></div>
+      </div>
       <div id="progress"></div>
       <div id="status">Loading the lesson…</div>
-      <div id="french"></div>
-      <div id="english"></div>
+      <div id="target"></div>
+      <div id="meaning"></div>
       <button id="start" disabled>Start</button>
       <div id="controls" hidden>
         <button id="pause">Pause</button>

@@ -123,8 +123,8 @@ export class LessonAudio {
       return;
     }
     const url =
-      effect.type === 'playFrench'
-        ? this.clips.frenchUrl(effect.index)
+      effect.type === 'playTarget'
+        ? this.clips.targetUrl(effect.index)
         : effect.type === 'playMeaning'
           ? this.clips.meaningUrl(effect.index)
           : this.clips.finishedCueUrl();
@@ -141,7 +141,7 @@ export class LessonAudio {
     if (!this.userPaused) this.playClip();
   }
 
-  /** Speed of the English meaning voice (1 = normal), also while one plays. */
+  /** Speed of the meaning voice (1 = normal), also while one plays. */
   setMeaningRate(rate: number): void {
     this.meaningRate = rate;
     this.applyRate();

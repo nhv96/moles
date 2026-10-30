@@ -4,7 +4,7 @@
 
 export type Phase =
   | 'idle'
-  | 'playingFrench'
+  | 'playingTarget'
   | 'waiting'
   | 'playingMeaning'
   | 'playingFinishedCue'
@@ -24,7 +24,7 @@ export const DEFAULT_SETTINGS: Settings = { silenceMs: 3000, maxWaitMs: 15000 };
 
 /** Each play effect replaces whatever clip is playing. `id` comes back in `clipEnded`. */
 export type Effect =
-  | { type: 'playFrench'; index: number; id: number }
+  | { type: 'playTarget'; index: number; id: number }
   | { type: 'playMeaning'; index: number; id: number }
   | { type: 'playFinishedCue'; id: number }
   | { type: 'stop' };
@@ -74,7 +74,7 @@ export class LessonMachine {
   start(): void {
     this.clearTimers();
     this.index = 0;
-    this.playFrench();
+    this.playTarget();
   }
 
   speechStart(): void {
@@ -91,7 +91,7 @@ export class LessonMachine {
   clipEnded(id: number): void {
     if (id !== this.clipId) return;
     switch (this.phase) {
-      case 'playingFrench':
+      case 'playingTarget':
         this.phase = 'waiting';
         this.startWait();
         break;
@@ -130,25 +130,25 @@ export class LessonMachine {
     this.phase = 'finished';
   }
 
-  /** Replay the French sentence, then the loop continues. */
+  /** Replay the target sentence, then the loop continues. */
   repeat(): void {
-    if (this.phase === 'playingFrench' || this.phase === 'waiting') {
+    if (this.phase === 'playingTarget' || this.phase === 'waiting') {
       this.clearTimers();
-      this.playFrench();
+      this.playTarget();
     }
   }
 
   /** Skip the meaning and go to the next sentence. */
   next(): void {
-    if (this.phase === 'playingFrench' || this.phase === 'waiting') {
+    if (this.phase === 'playingTarget' || this.phase === 'waiting') {
       this.clearTimers();
       this.advance();
     }
   }
 
-  private playFrench(): void {
-    this.phase = 'playingFrench';
-    this.onEffect({ type: 'playFrench', index: this.index, id: ++this.clipId });
+  private playTarget(): void {
+    this.phase = 'playingTarget';
+    this.onEffect({ type: 'playTarget', index: this.index, id: ++this.clipId });
   }
 
   private playMeaning(): void {
@@ -164,7 +164,7 @@ export class LessonMachine {
   private advance(): void {
     if (this.index + 1 < this.sentenceCount) {
       this.index += 1;
-      this.playFrench();
+      this.playTarget();
     } else {
       this.phase = 'playingFinishedCue';
       this.onEffect({ type: 'playFinishedCue', id: ++this.clipId });

@@ -118,7 +118,7 @@ describe('start', () => {
     expect(calls).toEqual([
       'mic.open',
       'audio.start',
-      'audio.apply playFrench',
+      'audio.apply playTarget',
     ]);
     expect(session.state.phase).toBe('running');
   });
@@ -153,7 +153,7 @@ describe('start', () => {
 describe('the loop', () => {
   beforeEach(startRunning);
 
-  it('waits after the French and plays the meaning when the learner has spoken', () => {
+  it('waits after the target and plays the meaning when the learner has spoken', () => {
     audioEvents.clipEnded(lastId());
     expect(session.state.lesson.phase).toBe('waiting');
     micEvents.speechStart();
@@ -171,7 +171,7 @@ describe('the loop', () => {
 
   it('goes through both sentences, plays the cue and releases everything', () => {
     for (let i = 0; i < 2; i++) {
-      audioEvents.clipEnded(lastId()); // French
+      audioEvents.clipEnded(lastId()); // target
       clock.advance(15000);
       audioEvents.clipEnded(lastId()); // meaning
     }
@@ -188,9 +188,9 @@ describe('the loop', () => {
 
   it('headphone buttons repeat and skip', () => {
     audioEvents.repeat();
-    expect(applied.at(-1)).toMatchObject({ type: 'playFrench', index: 0 });
+    expect(applied.at(-1)).toMatchObject({ type: 'playTarget', index: 0 });
     audioEvents.next();
-    expect(applied.at(-1)).toMatchObject({ type: 'playFrench', index: 1 });
+    expect(applied.at(-1)).toMatchObject({ type: 'playTarget', index: 1 });
   });
 
   it('pausing freezes the wait; resuming gives a full new wait', () => {
@@ -199,11 +199,11 @@ describe('the loop', () => {
     session.togglePause();
     expect(session.state.paused).toBe(true);
     clock.advance(60000);
-    expect(applied.at(-1)).toMatchObject({ type: 'playFrench' });
+    expect(applied.at(-1)).toMatchObject({ type: 'playTarget' });
     session.togglePause();
     expect(session.state.paused).toBe(false);
     clock.advance(14999);
-    expect(applied.at(-1)).toMatchObject({ type: 'playFrench' });
+    expect(applied.at(-1)).toMatchObject({ type: 'playTarget' });
     clock.advance(1);
     expect(applied.at(-1)).toMatchObject({ type: 'playMeaning' });
   });
@@ -212,7 +212,7 @@ describe('the loop', () => {
     audioEvents.clipEnded(lastId());
     audioEvents.pausedChange(true);
     clock.advance(60000);
-    expect(applied.at(-1)).toMatchObject({ type: 'playFrench' });
+    expect(applied.at(-1)).toMatchObject({ type: 'playTarget' });
   });
 
   it('after stop, a pending wait does not play anything', () => {
@@ -269,7 +269,7 @@ describe('applySettings', () => {
     session.applySettings(settings);
     audioEvents.clipEnded(lastId());
     clock.advance(4999);
-    expect(applied.at(-1)).toMatchObject({ type: 'playFrench' });
+    expect(applied.at(-1)).toMatchObject({ type: 'playTarget' });
     clock.advance(1);
     expect(applied.at(-1)).toMatchObject({ type: 'playMeaning' });
   });

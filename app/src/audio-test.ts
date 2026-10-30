@@ -48,7 +48,8 @@ startButton.onclick = async () => {
     log(`options: wait=${waitMs / 1000}s, silentTrack=${silentTrack}`);
     log('loading the lesson');
     const { manifest, clips } = await loadLesson(
-      `${import.meta.env.BASE_URL}lessons/lesson-01/`,
+      `${import.meta.env.BASE_URL}lessons/`,
+      'fr-en/lesson-01/manifest.json',
     );
     log(`loaded ${manifest.items.length} sentences`);
 
