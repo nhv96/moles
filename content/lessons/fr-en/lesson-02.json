@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "id": "lesson-02",
+  "target_lang": "fr",
+  "meaning_lang": "en",
+  "title": "Buying fruit at a market",
+  "persona": "Marc",
+  "register": "vous",
+  "accent": "France French",
+  "speakers": {
+    "a": "Customer",
+    "b": "Seller"
+  },
+  "sentences": [
+    {
+      "id": "s01",
+      "speaker": "a",
+      "target": "Bonjour madame.",
+      "meaning": "Hello madam.",
+      "phrases": [
+        "Bonjour",
+        "madame."
+      ]
+    },
+    {
+      "id": "s02",
+      "speaker": "b",
+      "target": "Bonjour monsieur.",
+      "meaning": "Hello sir.",
+      "phrases": [
+        "Bonjour",
+        "monsieur."
+      ]
+    },
+    {
+      "id": "s03",
+      "speaker": "a",
+      "target": "Je voudrais des pommes.",
+      "meaning": "I would like some apples.",
+      "phrases": [
+        "Je voudrais",
+        "des pommes."
+      ]
+    },
+    {
+      "id": "s04",
+      "speaker": "b",
+      "target": "Combien de kilos ?",
+      "meaning": "How many kilos?"
+    },
+    {
+      "id": "s05",
+      "speaker": "a",
+      "target": "Un kilo, s'il vous plaît.",
+      "meaning": "One kilo, please.",
+      "phrases": [
+        "Un kilo,",
+        "s'il vous plaît."
+      ]
+    },
+    {
+      "id": "s06",
+      "speaker": "b",
+      "target": "Voilà. Autre chose ?",
+      "meaning": "Here you are. Anything else?",
+      "phrases": [
+        "Voilà.",
+        "Autre chose ?"
+      ]
+    },
+    {
+      "id": "s07",
+      "speaker": "a",
+      "target": "Non, c'est tout.",
+      "meaning": "No, that is all.",
+      "phrases": [
+        "Non,",
+        "c'est tout."
+      ]
+    },
+    {
+      "id": "s08",
+      "speaker": "b",
+      "target": "Ça fait trois euros.",
+      "meaning": "That is three euros."
+    }
+  ]
+}

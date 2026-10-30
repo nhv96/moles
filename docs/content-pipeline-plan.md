@@ -216,6 +216,8 @@ Generate a real second lesson with the prompt, check it with `validate`, sweep, 
 
 Done when: a new `fr-en` lesson went from prompt to the deployed app without hand-editing the pipeline.
 
+**Result (2026-10-30).** `fr-en/lesson-02` ("Buying fruit at a market", two speakers, 8 sentences) was written by an AI in a separate chat from the prompt alone, with no other context. The first answer passed `validate` with no hand editing: all sentences had a speaker, 2 to 5 words, numbers as words, no closing sentence. One weakness: the AI split three sentences into `phrases` where there is no natural pause (s01, s02, s03: "Bonjour / madame.", "Je voudrais / des pommes."), against rule 7; the user chose whole mode for them. The user tuned it by ear after the sweep (speeds 0.85 to 0.95, phrase mode for s05 to s07) and chose 100 ms for phrase pauses, so the default pause changed from 400 ms to 100 ms (`DEFAULT_PHRASE_PAUSE_MS`; lesson 1 keeps its own values). `build` and `sync-content` needed no change, the picker showed both lessons, and the lesson played on the phone through the tunnel. The French text has not been reviewed by a native speaker yet. The build re-made the shared end cue with different bytes (Kokoro is not repeatable), so the committed `cues/en.m4a` was kept.
+
 ### Task 8: recording engine
 
 - Add the "recording" engine to the engine layer.

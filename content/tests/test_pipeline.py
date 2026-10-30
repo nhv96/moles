@@ -77,8 +77,8 @@ def test_lesson_without_tuning_file(lesson_root):
     (lesson_root / TUNING).unlink()
     loaded = load_lesson(lesson_root, KEY)
     assert loaded.tuning == {}
-    # fr default_speed 0.9, no mode, pause 400; en default_speed 1.0
-    assert loaded.settings(loaded.sentences[0]) == SentenceSettings(speed=0.9, mode="whole", pause_ms=400)
+    # fr default_speed 0.9, no mode, pause 100; en default_speed 1.0
+    assert loaded.settings(loaded.sentences[0]) == SentenceSettings(speed=0.9, mode="whole", pause_ms=100)
     assert loaded.meaning_speed == 1.0
 
 
