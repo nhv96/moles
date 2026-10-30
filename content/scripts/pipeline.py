@@ -15,7 +15,8 @@ for example fr-en/lesson-01 (files lessons/fr-en/lesson-01.json and .tuning.json
 
   build     Final files. Uses the settings in the lesson's tuning file and writes one clip per
             sentence for each of the two languages (AAC/M4A, same loudness), the end cue of the
-            meaning language, manifest.json, and index.json (the list of everything built).
+            meaning language, manifest.json, and index.json (the list of everything built). It then checks that every
+            file of the manifest exists, is not empty and has the length the manifest says.
                 uv run scripts/pipeline.py build fr-en/lesson-01
                 uv run scripts/pipeline.py build fr-en/lesson-01 --bitrate 48 --out build-48
 
@@ -75,6 +76,7 @@ def cmd_sweep(args) -> None:
 
 
 def cmd_build(args) -> None:
+    from buildcheck import BuildCheckError, check_lesson_build
     from index import IndexBuildError, write_index
     from render import build_lesson
 
@@ -82,8 +84,9 @@ def cmd_build(args) -> None:
     build_root = args.out or args.content_dir / "build"
     out_dir = build_lesson(lesson, target, meaning, build_root, args.bitrate)
     try:
+        check_lesson_build(build_root, out_dir / "manifest.json")
         index = write_index(args.content_dir, build_root)
-    except IndexBuildError as e:
+    except (BuildCheckError, IndexBuildError) as e:
         raise SystemExit(f"error: {e}")
     print(f"\nDone. Files and manifest.json are in {out_dir}; the list of all built lessons is {index}")
 

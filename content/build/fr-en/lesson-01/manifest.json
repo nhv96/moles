@@ -1,0 +1,108 @@
+{
+  "schema_version": 1,
+  "lesson": "lesson-01",
+  "pair": "fr-en",
+  "target_lang": "fr",
+  "meaning_lang": "en",
+  "title": "Introduce yourself",
+  "target_voice": "ff_siwis",
+  "meaning_voice": "af_heart",
+  "format": "aac-m4a",
+  "bitrate_kbps": 96,
+  "loudness_lufs": -16.0,
+  "items": [
+    {
+      "id": "s01",
+      "target": "Bonjour, je m'appelle Marc.",
+      "meaning": "Hello, my name is Marc.",
+      "speed": 0.87,
+      "mode": "phrases",
+      "target_file": "s01_target.m4a",
+      "meaning_file": "s01_meaning.m4a",
+      "target_seconds": 2.36,
+      "meaning_seconds": 2.05
+    },
+    {
+      "id": "s02",
+      "target": "Je suis italien.",
+      "meaning": "I am Italian.",
+      "speed": 0.9,
+      "mode": "whole",
+      "target_file": "s02_target.m4a",
+      "meaning_file": "s02_meaning.m4a",
+      "target_seconds": 1.29,
+      "meaning_seconds": 1.8
+    },
+    {
+      "id": "s03",
+      "target": "J'habite en Belgique.",
+      "meaning": "I live in Belgium.",
+      "speed": 0.87,
+      "mode": "whole",
+      "target_file": "s03_target.m4a",
+      "meaning_file": "s03_meaning.m4a",
+      "target_seconds": 1.45,
+      "meaning_seconds": 1.95
+    },
+    {
+      "id": "s04",
+      "target": "Je travaille ici.",
+      "meaning": "I work here.",
+      "speed": 0.92,
+      "mode": "whole",
+      "target_file": "s04_target.m4a",
+      "meaning_file": "s04_meaning.m4a",
+      "target_seconds": 1.22,
+      "meaning_seconds": 1.6
+    },
+    {
+      "id": "s05",
+      "target": "Je parle un peu français.",
+      "meaning": "I speak a little French.",
+      "speed": 0.85,
+      "mode": "whole",
+      "target_file": "s05_target.m4a",
+      "meaning_file": "s05_meaning.m4a",
+      "target_seconds": 1.69,
+      "meaning_seconds": 2.05
+    },
+    {
+      "id": "s06",
+      "target": "J'apprends le français.",
+      "meaning": "I am learning French.",
+      "speed": 0.85,
+      "mode": "whole",
+      "target_file": "s06_target.m4a",
+      "meaning_file": "s06_meaning.m4a",
+      "target_seconds": 1.47,
+      "meaning_seconds": 1.95
+    },
+    {
+      "id": "s07",
+      "target": "Et vous, comment vous appelez-vous ?",
+      "meaning": "And you, what is your name?",
+      "speed": 0.9,
+      "mode": "phrases",
+      "target_file": "s07_target.m4a",
+      "meaning_file": "s07_meaning.m4a",
+      "target_seconds": 2.07,
+      "meaning_seconds": 2.2
+    },
+    {
+      "id": "s08",
+      "target": "Plus lentement, s'il vous plaît.",
+      "meaning": "More slowly, please.",
+      "speed": 0.9,
+      "mode": "phrases",
+      "target_file": "s08_target.m4a",
+      "meaning_file": "s08_meaning.m4a",
+      "target_seconds": 2.07,
+      "meaning_seconds": 2.05
+    }
+  ],
+  "end_cue": {
+    "text": "The lesson is finished.",
+    "file": "cues/en.m4a",
+    "seconds": 2.02
+  }
+}

@@ -11,7 +11,9 @@ What is checked, starting from the content folder:
   prompts/generate-lesson.md             its copy of the lesson schema, and its example
 
 The build output has its own contract: schema/manifest.schema.json and schema/index.schema.json,
-with the rules in check_manifest and check_index. They are used on files that "build" wrote.
+with the rules in check_manifest and check_index. "build" uses it on the files it writes, and
+validate checks the committed build folder (build/index.json, the manifests it lists, and that
+their audio files exist and are not empty; lengths are checked by "build", which has ffprobe).
 
 When a file fails its schema, only the schema errors are shown for it: the rules need a file of
 the right shape, so they run once the schema errors are fixed.
@@ -29,6 +31,7 @@ from jsonschema import Draft202012Validator
 TUNING_SUFFIX = ".tuning.json"
 PROMPT_FILE = "prompts/generate-lesson.md"
 MAX_MESSAGE_CHARS = 160
+BUILD_DIR = "build"
 
 
 @dataclass
@@ -235,6 +238,51 @@ def validate_build_doc(root: Path, kind: str, doc, rel: str) -> Report:
     return report
 
 
+def check_build_files(root: Path, report: Report) -> None:
+    """The committed build folder, if there is one: the index, the manifests it lists, and their files."""
+    index_rel = f"{BUILD_DIR}/index.json"
+    index_path = root / index_rel
+    if not index_path.exists():
+        return
+    index = read_json(index_path, index_rel, report)
+    if index is None:
+        return
+    found = validate_build_doc(root, "index", index, index_rel)
+    report.errors += found.errors
+    if found.errors:
+        return
+
+    def has_file(rel: str, listed_in: str) -> bool:
+        path = root / BUILD_DIR / rel
+        if not path.is_file():
+            report.error(f"{BUILD_DIR}/{rel}", f"file is missing (listed in {listed_in})")
+        elif path.stat().st_size == 0:
+            report.error(f"{BUILD_DIR}/{rel}", "file is empty")
+        else:
+            return True
+        return False
+
+    for lang, cue in index["cues"].items():
+        has_file(cue["file"], f"{index_rel}, cue {lang}")
+    for entry in index["lessons"]:
+        manifest_rel = f"{BUILD_DIR}/{entry['manifest']}"
+        if not has_file(entry["manifest"], index_rel):
+            continue
+        manifest = read_json(root / manifest_rel, manifest_rel, report)
+        if manifest is None:
+            continue
+        found = validate_build_doc(root, "manifest", manifest, manifest_rel)
+        report.errors += found.errors
+        if found.errors:
+            continue
+        folder = f"{manifest['pair']}/{manifest['lesson']}"
+        for item in manifest["items"]:
+            for role in ("target", "meaning"):
+                has_file(f"{folder}/{item[f'{role}_file']}", manifest_rel)
+        if manifest["meaning_lang"] in index["cues"] and manifest["end_cue"]["file"] != index["cues"][manifest["meaning_lang"]]["file"]:
+            report.error(manifest_rel, f"end_cue.file differs from the cue of {manifest['meaning_lang']!r} in {index_rel}")
+
+
 # --------------------------------------------------------------------------- entry point
 
 
@@ -286,4 +334,5 @@ def validate_content(root: Path) -> Report:
         if lesson_path in valid_lessons:  # otherwise the lesson's own errors are already listed
             check_tuning(doc, valid_lessons[lesson_path], rel, languages, report)
 
+    check_build_files(root, report)
     return report

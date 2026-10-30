@@ -7,7 +7,7 @@ reasons are in `../docs/content-pipeline-plan.md`.
 
 ```
 content/
-  schema/                     the contract: JSON Schemas for lesson, tuning and languages files
+  schema/                     the contract: JSON Schemas for the lesson, tuning, languages, manifest and index files
   prompts/generate-lesson.md  the fixed prompt for the AI that writes a lesson
   languages.json              per language: engine, voice, default speed, end cue
   lessons/<pair>/             <pair> is <learned>-<explanation>, for example fr-en
@@ -16,13 +16,14 @@ content/
   scripts/pipeline.py         the command line: validate, sweep, build
   tests/                      tests of the checks and of the build code
   out/<pair>/<lesson>/        sweep output (git-ignored): wav files + review.md
-  build/<pair>/<lesson>/      build output: m4a files + manifest.json (git-ignored for now, see below)
-  build/cues/<lang>.m4a       the "lesson is finished" sentence, one per explanation language
-  build/lesson-01/            the build the app uses today (old layout, committed, do not change)
+  build/index.json            list of every built lesson and end cue (committed, the app reads it)
+  build/<pair>/<lesson>/      build output: m4a files + manifest.json (committed)
+  build/cues/<lang>.m4a       the "lesson is finished" sentence, one per explanation language (committed)
 ```
 
-The app still reads the old `build/lesson-01/`. The new layout (`build/<pair>/...`) is committed
-when `sync-content` and the app move to it (tasks 5 and 6 of the plan).
+The `build/` folder is committed, because the app is deployed from it. `app/scripts/sync-content.mjs`
+copies it into the app. Until task 6 of the plan, the app still expects the old manifest format, so it
+cannot play the new build.
 
 ## Setup (Ubuntu)
 
@@ -91,7 +92,11 @@ A lesson is named by its pair and id, for example `fr-en/lesson-01`.
    ```
 
    It writes `s01_target.m4a`, `s01_meaning.m4a`, ..., `manifest.json`, and the end cue of the
-   explanation language in `build/cues/`. Every clip is brought to the same loudness (-16 LUFS), 100 ms
+   explanation language in `build/cues/`. Then it checks that every file of the manifest exists, is
+   not empty and is as long as the manifest says (within 0.1 s, and longer than 0.3 s), and it
+   rewrites `build/index.json` from all manifests in the folder. A failed check stops the build and
+   names the files. `validate` also checks the committed `build/` folder (index, manifests, and that
+   each listed file exists), without audio tools. Every clip is brought to the same loudness (-16 LUFS), 100 ms
    of silence is added at the start, peaks are limited to -3.5 dBFS, and the result is encoded as mono
    AAC at 96 kbps. To compare bitrates:
 

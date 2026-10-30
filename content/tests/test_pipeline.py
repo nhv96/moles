@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 
 import pipeline
+from buildcheck import BuildCheckError, check_lesson_build
 from engines import Engine, EngineError, create_engine
 from helpers import CONTENT, LESSON, TUNING, lesson, load, tuning, write
 from lesson import LessonError, SentenceSettings, load_lesson, normalize_key
@@ -270,6 +271,70 @@ def test_cli_build_writes_the_index(monkeypatch, lesson_root, tmp_path, capsys):
     run_cli(monkeypatch, "build", KEY, "--content-dir", str(lesson_root), "--out", str(tmp_path / "build"))
     assert (tmp_path / "build" / "index.json").is_file()
     assert "index.json" in capsys.readouterr().out
+
+
+# --------------------------------------------------------------------------- build check
+
+
+@pytest.fixture
+def built(lesson_root, tmp_path):
+    if shutil.which("ffmpeg") is None or shutil.which("ffprobe") is None:
+        pytest.skip("ffmpeg is not installed")
+    out_root = tmp_path / "build"
+    out = build_lesson(load_lesson(lesson_root, KEY), FakeEngine(), FakeEngine(), out_root)
+    return out_root, out / "manifest.json"
+
+
+def test_a_good_build_passes_the_check(built):
+    check_lesson_build(*built)
+
+
+def test_missing_files_are_named(built):
+    out_root, manifest = built
+    (manifest.parent / "s02_meaning.m4a").unlink()
+    (out_root / "cues" / "en.m4a").unlink()
+    with pytest.raises(BuildCheckError) as e:
+        check_lesson_build(out_root, manifest)
+    assert "fr-en/lesson-02/s02_meaning.m4a: file is missing" in str(e.value)
+    assert "cues/en.m4a: file is missing" in str(e.value)
+
+
+def test_empty_and_unreadable_clips_are_named(built):
+    out_root, manifest = built
+    (manifest.parent / "s01_target.m4a").write_bytes(b"")
+    (manifest.parent / "s03_target.m4a").write_bytes(b"not audio")
+    with pytest.raises(BuildCheckError) as e:
+        check_lesson_build(out_root, manifest)
+    assert "s01_target.m4a: file is empty" in str(e.value)
+    assert "s03_target.m4a: ffprobe cannot read" in str(e.value)
+
+
+def test_a_clip_that_differs_from_the_manifest_is_named(built):
+    out_root, manifest = built
+    doc = json.loads(manifest.read_text(encoding="utf-8"))
+    doc["items"][0]["target_seconds"] += 0.5
+    manifest.write_text(json.dumps(doc), encoding="utf-8")
+    with pytest.raises(BuildCheckError, match=r"s01_target.m4a: is \d+\.\d+s long but the manifest says"):
+        check_lesson_build(out_root, manifest)
+
+
+def test_a_too_short_clip_is_named(built, monkeypatch):
+    import buildcheck
+    out_root, manifest = built
+    monkeypatch.setattr(buildcheck, "probe_seconds", lambda path: 0.2)
+    with pytest.raises(BuildCheckError, match="only 0.20s long"):
+        check_lesson_build(out_root, manifest)
+
+
+@needs_ffmpeg
+def test_cli_build_fails_and_writes_no_index_for_a_bad_build(monkeypatch, lesson_root, tmp_path):
+    import buildcheck
+    monkeypatch.setattr(pipeline, "load_engines", lambda lesson: (FakeEngine("t"), FakeEngine("m")))
+    monkeypatch.setattr(buildcheck, "probe_seconds", lambda path: 0.2)
+    with pytest.raises(SystemExit) as e:
+        run_cli(monkeypatch, "build", KEY, "--content-dir", str(lesson_root), "--out", str(tmp_path / "build"))
+    assert "not good" in str(e.value)
+    assert not (tmp_path / "build" / "index.json").exists()
 
 
 # --------------------------------------------------------------------------- command line

@@ -113,3 +113,66 @@ def test_index_duplicate_and_order(root):
     other["manifest"] = "fr-en/lesson-01/manifest.json"
     doc["lessons"].append(other)
     assert_error(check(root, "index", doc), "not sorted")
+
+
+# --------------------------------------------------------------------------- the committed build folder
+
+
+@pytest.fixture
+def build_root(root):
+    """The example index and manifest, with a (fake, non-empty) file for every clip."""
+    from contract import validate_content
+    from helpers import write
+    doc = manifest()
+    write(root, "build/index.json", index())
+    write(root, "build/fr-en/lesson-02/manifest.json", doc)
+    for item in doc["items"]:
+        for role in ("target", "meaning"):
+            write(root, f"build/fr-en/lesson-02/{item[f'{role}_file']}", "x")
+    write(root, "build/cues/en.m4a", "x")
+    assert validate_content(root).errors == []
+    return root
+
+
+def build_errors(root):
+    from contract import validate_content
+    return validate_content(root).errors
+
+
+def test_no_build_folder_is_fine(root):
+    from contract import validate_content
+    assert validate_content(root).errors == []
+
+
+def test_missing_clip_is_named(build_root):
+    (build_root / "build/fr-en/lesson-02/s02_target.m4a").unlink()
+    errors = build_errors(build_root)
+    assert any("build/fr-en/lesson-02/s02_target.m4a" in e and "file is missing" in e for e in errors), errors
+
+
+def test_missing_cue_and_manifest_are_named(build_root):
+    (build_root / "build/cues/en.m4a").unlink()
+    (build_root / "build/fr-en/lesson-02/manifest.json").unlink()
+    errors = build_errors(build_root)
+    assert any("build/cues/en.m4a" in e and "missing" in e for e in errors), errors
+    assert any("build/fr-en/lesson-02/manifest.json" in e and "missing" in e for e in errors), errors
+
+
+def test_empty_clip_is_named(build_root):
+    (build_root / "build/fr-en/lesson-02/s01_meaning.m4a").write_text("")
+    errors = build_errors(build_root)
+    assert any("s01_meaning.m4a" in e and "empty" in e for e in errors), errors
+
+
+def test_old_format_manifest_in_the_build_is_reported(build_root):
+    from helpers import write
+    write(build_root, "build/fr-en/lesson-02/manifest.json", {"lesson": "lesson-02", "items": []})
+    assert any("build/fr-en/lesson-02/manifest.json" in e for e in build_errors(build_root))
+
+
+def test_manifest_cue_must_match_the_index(build_root):
+    from helpers import write
+    doc = manifest()
+    doc["end_cue"]["file"] = "cues/other.m4a"
+    write(build_root, "build/fr-en/lesson-02/manifest.json", doc)
+    assert any("end_cue.file differs" in e for e in build_errors(build_root))
