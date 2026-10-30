@@ -10,6 +10,9 @@ What is checked, starting from the content folder:
   lessons/<pair>/<lesson-id>.tuning.json against schema/tuning.schema.json, plus the rules
   prompts/generate-lesson.md             its copy of the lesson schema, and its example
 
+The build output has its own contract: schema/manifest.schema.json and schema/index.schema.json,
+with the rules in check_manifest and check_index. They are used on files that "build" wrote.
+
 When a file fails its schema, only the schema errors are shown for it: the rules need a file of
 the right shape, so they run once the schema errors are fixed.
 """
@@ -164,6 +167,46 @@ def check_tuning(tuning: dict, lesson: dict, rel: str, languages: dict | None, r
         report.warn(rel, f"meaning_speed is ignored: {lesson['meaning_lang']} is recorded, not generated")
 
 
+def check_manifest(doc: dict, rel: str, report: Report) -> None:
+    """Rules for a manifest that passed its schema."""
+    if doc["pair"] != f"{doc['target_lang']}-{doc['meaning_lang']}":
+        report.error(rel, f"pair is {doc['pair']!r} but the languages make {doc['target_lang']}-{doc['meaning_lang']}")
+    if doc["target_lang"] == doc["meaning_lang"]:
+        report.error(rel, f"target_lang and meaning_lang are both {doc['target_lang']!r}; they must differ")
+
+    seen: set[str] = set()
+    for item in doc["items"]:
+        if item["id"] in seen:
+            report.error(rel, f"{item['id']}: sentence id is used more than once")
+        seen.add(item["id"])
+
+    with_speaker = [i["id"] for i in doc["items"] if "speaker" in i]
+    if "speakers" in doc and len(with_speaker) != len(doc["items"]):
+        report.error(rel, "speakers is set, so every item needs a speaker")
+    if "speakers" not in doc and with_speaker:
+        report.error(rel, f"items have a speaker ({', '.join(with_speaker)}) but the manifest has no speakers")
+
+
+def check_index(doc: dict, rel: str, report: Report) -> None:
+    """Rules for an index that passed its schema."""
+    seen: set[tuple[str, str]] = set()
+    for entry in doc["lessons"]:
+        key = (entry["pair"], entry["lesson"])
+        name = f"{entry['pair']}/{entry['lesson']}"
+        if key in seen:
+            report.error(rel, f"{name}: lesson is listed more than once")
+        seen.add(key)
+        if entry["pair"] != f"{entry['target_lang']}-{entry['meaning_lang']}":
+            report.error(rel, f"{name}: pair does not match target_lang and meaning_lang")
+        if entry["manifest"] != f"{name}/manifest.json":
+            report.error(rel, f"{name}: manifest path is {entry['manifest']!r}, expected '{name}/manifest.json'")
+        if entry["meaning_lang"] not in doc["cues"]:
+            report.error(rel, f"{name}: no end cue for the meaning language {entry['meaning_lang']!r} in cues")
+    keys = [(e["pair"], e["lesson"]) for e in doc["lessons"]]
+    if keys != sorted(keys):
+        report.error(rel, "lessons are not sorted by pair and lesson id")
+
+
 def check_prompt(root: Path, lesson_schema: dict, validator: Draft202012Validator, report: Report) -> None:
     """The prompt must hold the current lesson schema, and any lesson in it must be valid."""
     path = root / PROMPT_FILE
@@ -181,6 +224,15 @@ def check_prompt(root: Path, lesson_schema: dict, validator: Draft202012Validato
     for doc in docs:
         if isinstance(doc, dict) and "schema_version" in doc and doc != lesson_schema:
             schema_errors(validator, doc, f"{PROMPT_FILE} (example)", report)
+
+
+def validate_build_doc(root: Path, kind: str, doc, rel: str) -> Report:
+    """Check a manifest (kind "manifest") or an index (kind "index") that build wrote or will write."""
+    report = Report()
+    validator = load_validator(root, f"{kind}.schema.json", report)
+    if validator is not None and schema_errors(validator, doc, rel, report):
+        (check_manifest if kind == "manifest" else check_index)(doc, rel, report)
+    return report
 
 
 # --------------------------------------------------------------------------- entry point

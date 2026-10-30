@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "manifest.schema.json",
+  "title": "Built lesson manifest",
+  "description": "Written by `build` next to the audio of one lesson (build/<pair>/<lesson>/manifest.json) and read by the app. Generated, never edited by hand. All file names of the items are relative to the lesson folder; end_cue.file is relative to the build folder.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "lesson",
+    "pair",
+    "target_lang",
+    "meaning_lang",
+    "title",
+    "target_voice",
+    "meaning_voice",
+    "format",
+    "bitrate_kbps",
+    "loudness_lufs",
+    "items",
+    "end_cue"
+  ],
+  "properties": {
+    "schema_version": { "description": "Version of this contract. Always 1.", "const": 1 },
+    "lesson": { "type": "string", "pattern": "^lesson-[0-9]{2,}$" },
+    "pair": {
+      "description": "<target_lang>-<meaning_lang>, also the folder name.",
+      "type": "string",
+      "pattern": "^[a-z]{2,3}-[a-z]{2,3}$"
+    },
+    "target_lang": { "type": "string", "pattern": "^[a-z]{2,3}$" },
+    "meaning_lang": { "type": "string", "pattern": "^[a-z]{2,3}$" },
+    "title": { "type": "string", "minLength": 1 },
+    "speakers": {
+      "description": "Optional. The two roles of a conversation, as in the lesson file.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["a", "b"],
+      "properties": {
+        "a": { "type": "string", "minLength": 1 },
+        "b": { "type": "string", "minLength": 1 }
+      }
+    },
+    "target_voice": { "description": "Voice or source of the target clips, for example ff_siwis.", "type": "string", "minLength": 1 },
+    "meaning_voice": { "type": "string", "minLength": 1 },
+    "format": { "const": "aac-m4a" },
+    "bitrate_kbps": { "type": "integer", "minimum": 1 },
+    "loudness_lufs": { "type": "number", "maximum": 0 },
+    "items": {
+      "description": "The sentences in playing order.",
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/item" }
+    },
+    "end_cue": { "$ref": "#/$defs/end_cue" }
+  },
+  "$defs": {
+    "seconds": { "type": "number", "exclusiveMinimum": 0 },
+    "file": {
+      "description": "A relative path to an m4a file, no leading slash and no '..'.",
+      "type": "string",
+      "pattern": "^(?!/)(?!.*\\.\\.)[A-Za-z0-9_./-]+\\.m4a$"
+    },
+    "item": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "target",
+        "meaning",
+        "speed",
+        "mode",
+        "target_file",
+        "meaning_file",
+        "target_seconds",
+        "meaning_seconds"
+      ],
+      "properties": {
+        "id": { "type": "string", "pattern": "^s[0-9]{2,}$" },
+        "speaker": { "enum": ["a", "b"] },
+        "target": { "type": "string", "minLength": 1 },
+        "meaning": { "type": "string", "minLength": 1 },
+        "speed": { "type": "number", "minimum": 0.5, "maximum": 1.5 },
+        "mode": { "enum": ["whole", "phrases"] },
+        "target_file": { "$ref": "#/$defs/file" },
+        "meaning_file": { "$ref": "#/$defs/file" },
+        "target_seconds": { "$ref": "#/$defs/seconds" },
+        "meaning_seconds": { "$ref": "#/$defs/seconds" }
+      }
+    },
+    "end_cue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["text", "file", "seconds"],
+      "properties": {
+        "text": { "type": "string", "minLength": 1 },
+        "file": { "$ref": "#/$defs/file" },
+        "seconds": { "$ref": "#/$defs/seconds" }
+      }
+    }
+  }
+}
