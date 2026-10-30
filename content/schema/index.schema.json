@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "index.schema.json",
+  "title": "Build index",
+  "description": "Written by `build` as build/index.json. It lists every built lesson and the end cue of every meaning language; the app and sync-content read only this file to find out what exists. Generated, never edited by hand. All paths are relative to the build folder.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "cues", "lessons"],
+  "properties": {
+    "schema_version": { "description": "Version of this contract. Always 1.", "const": 1 },
+    "cues": {
+      "description": "The 'lesson is finished' clip of each meaning language, keyed by language code.",
+      "type": "object",
+      "propertyNames": { "pattern": "^[a-z]{2,3}$" },
+      "additionalProperties": { "$ref": "#/$defs/cue" }
+    },
+    "lessons": {
+      "description": "Every built lesson, sorted by pair and then lesson id.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/lesson" }
+    }
+  },
+  "$defs": {
+    "path": {
+      "type": "string",
+      "pattern": "^(?!/)(?!.*\\.\\.)[A-Za-z0-9_./-]+$"
+    },
+    "cue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["text", "file", "seconds"],
+      "properties": {
+        "text": { "type": "string", "minLength": 1 },
+        "file": { "$ref": "#/$defs/path" },
+        "seconds": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "lesson": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pair", "lesson", "title", "target_lang", "meaning_lang", "sentences", "seconds", "manifest"],
+      "properties": {
+        "pair": { "type": "string", "pattern": "^[a-z]{2,3}-[a-z]{2,3}$" },
+        "lesson": { "type": "string", "pattern": "^lesson-[0-9]{2,}$" },
+        "title": { "type": "string", "minLength": 1 },
+        "target_lang": { "type": "string", "pattern": "^[a-z]{2,3}$" },
+        "meaning_lang": { "type": "string", "pattern": "^[a-z]{2,3}$" },
+        "sentences": { "description": "Number of sentences.", "type": "integer", "minimum": 1 },
+        "seconds": {
+          "description": "Total length of all target and meaning clips, without pauses added by the app.",
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "manifest": { "description": "Path of the lesson's manifest.json.", "$ref": "#/$defs/path" }
+      }
+    }
+  }
+}

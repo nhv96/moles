@@ -194,6 +194,10 @@ Done when: the rebuilt lesson 1 matches the current build, within the encoder's 
 
 Done when: a clean build and sync produces a working `public/lessons` folder, and a missing file is reported by name.
 
+**Decisions on 2026-10-30.** The deployed app does not have to keep working between tasks 5 and 6 (cheapest route): `sync-content` reads only the new layout, and the app is fixed in task 6. The committed audio was **renamed**, not rebuilt, so the files are the ones listened to on the phone; a one-off script (not kept) converted the manifest and checked every text, speed and mode against the lesson and tuning files. JSON Schemas were added for the manifest and the index (`schema/manifest.schema.json`, `schema/index.schema.json`). The checks after `build` live in `scripts/buildcheck.py` (a clip must be longer than 0.3 s and within 0.1 s of the manifest value) and fail the build; `validate` also checks the committed `build/` folder without audio tools.
+
+**Result (2026-10-30).** `build` writes `build/index.json` from all manifests in the folder: `cues` (one per meaning language: text, file, seconds) and `lessons` (pair, lesson, title, languages, number of sentences, total seconds, manifest path). `sync-content.mjs` checks every file listed, then copies `index.json`, `cues/` and each lesson folder to `public/lessons/`; the missing-file message names the file and where it was listed. The old `build/lesson-01/` is gone; the deployed app will not play until task 6.
+
 ### Task 6: app reads the index
 
 - Update the manifest parser and its tests for the new field names.
@@ -234,4 +238,4 @@ Done when: `sv-en` has a lesson the user judged good enough by listening. Likely
 - **Schema changes later.** `schema_version` is in from the start. The migration approach for old lessons is not decided and is not needed until the first schema change.
 - **Voices for the two speakers.** In a conversation, both speakers use the same voice for now (Kokoro has only one French voice). The `speaker` field is recorded so that a second voice, or showing who speaks, can be added later without changing the lesson files.
 - **Vietnamese end cue.** `languages.json` has the text "Bài học đã kết thúc." as a proposal; the user, as the Vietnamese speaker, confirms or changes the wording before recording it. French has no `end_cue` yet, because it is not planned as a meaning language.
-- **Where the shared cue audio is stored.** One cue per meaning language, built once. The exact path in `build/` and how the app finds it (through `index.json` or each manifest) is decided in task 5.
+- **Where the shared cue audio is stored.** Decided in task 5: `build/cues/<lang>.m4a`, listed in `index.json` under `cues`, and also named by each manifest's `end_cue.file`.

@@ -10,6 +10,11 @@ What is checked, starting from the content folder:
   lessons/<pair>/<lesson-id>.tuning.json against schema/tuning.schema.json, plus the rules
   prompts/generate-lesson.md             its copy of the lesson schema, and its example
 
+The build output has its own contract: schema/manifest.schema.json and schema/index.schema.json,
+with the rules in check_manifest and check_index. "build" uses it on the files it writes, and
+validate checks the committed build folder (build/index.json, the manifests it lists, and that
+their audio files exist and are not empty; lengths are checked by "build", which has ffprobe).
+
 When a file fails its schema, only the schema errors are shown for it: the rules need a file of
 the right shape, so they run once the schema errors are fixed.
 """
@@ -26,6 +31,7 @@ from jsonschema import Draft202012Validator
 TUNING_SUFFIX = ".tuning.json"
 PROMPT_FILE = "prompts/generate-lesson.md"
 MAX_MESSAGE_CHARS = 160
+BUILD_DIR = "build"
 
 
 @dataclass
@@ -164,6 +170,46 @@ def check_tuning(tuning: dict, lesson: dict, rel: str, languages: dict | None, r
         report.warn(rel, f"meaning_speed is ignored: {lesson['meaning_lang']} is recorded, not generated")
 
 
+def check_manifest(doc: dict, rel: str, report: Report) -> None:
+    """Rules for a manifest that passed its schema."""
+    if doc["pair"] != f"{doc['target_lang']}-{doc['meaning_lang']}":
+        report.error(rel, f"pair is {doc['pair']!r} but the languages make {doc['target_lang']}-{doc['meaning_lang']}")
+    if doc["target_lang"] == doc["meaning_lang"]:
+        report.error(rel, f"target_lang and meaning_lang are both {doc['target_lang']!r}; they must differ")
+
+    seen: set[str] = set()
+    for item in doc["items"]:
+        if item["id"] in seen:
+            report.error(rel, f"{item['id']}: sentence id is used more than once")
+        seen.add(item["id"])
+
+    with_speaker = [i["id"] for i in doc["items"] if "speaker" in i]
+    if "speakers" in doc and len(with_speaker) != len(doc["items"]):
+        report.error(rel, "speakers is set, so every item needs a speaker")
+    if "speakers" not in doc and with_speaker:
+        report.error(rel, f"items have a speaker ({', '.join(with_speaker)}) but the manifest has no speakers")
+
+
+def check_index(doc: dict, rel: str, report: Report) -> None:
+    """Rules for an index that passed its schema."""
+    seen: set[tuple[str, str]] = set()
+    for entry in doc["lessons"]:
+        key = (entry["pair"], entry["lesson"])
+        name = f"{entry['pair']}/{entry['lesson']}"
+        if key in seen:
+            report.error(rel, f"{name}: lesson is listed more than once")
+        seen.add(key)
+        if entry["pair"] != f"{entry['target_lang']}-{entry['meaning_lang']}":
+            report.error(rel, f"{name}: pair does not match target_lang and meaning_lang")
+        if entry["manifest"] != f"{name}/manifest.json":
+            report.error(rel, f"{name}: manifest path is {entry['manifest']!r}, expected '{name}/manifest.json'")
+        if entry["meaning_lang"] not in doc["cues"]:
+            report.error(rel, f"{name}: no end cue for the meaning language {entry['meaning_lang']!r} in cues")
+    keys = [(e["pair"], e["lesson"]) for e in doc["lessons"]]
+    if keys != sorted(keys):
+        report.error(rel, "lessons are not sorted by pair and lesson id")
+
+
 def check_prompt(root: Path, lesson_schema: dict, validator: Draft202012Validator, report: Report) -> None:
     """The prompt must hold the current lesson schema, and any lesson in it must be valid."""
     path = root / PROMPT_FILE
@@ -181,6 +227,60 @@ def check_prompt(root: Path, lesson_schema: dict, validator: Draft202012Validato
     for doc in docs:
         if isinstance(doc, dict) and "schema_version" in doc and doc != lesson_schema:
             schema_errors(validator, doc, f"{PROMPT_FILE} (example)", report)
+
+
+def validate_build_doc(root: Path, kind: str, doc, rel: str) -> Report:
+    """Check a manifest (kind "manifest") or an index (kind "index") that build wrote or will write."""
+    report = Report()
+    validator = load_validator(root, f"{kind}.schema.json", report)
+    if validator is not None and schema_errors(validator, doc, rel, report):
+        (check_manifest if kind == "manifest" else check_index)(doc, rel, report)
+    return report
+
+
+def check_build_files(root: Path, report: Report) -> None:
+    """The committed build folder, if there is one: the index, the manifests it lists, and their files."""
+    index_rel = f"{BUILD_DIR}/index.json"
+    index_path = root / index_rel
+    if not index_path.exists():
+        return
+    index = read_json(index_path, index_rel, report)
+    if index is None:
+        return
+    found = validate_build_doc(root, "index", index, index_rel)
+    report.errors += found.errors
+    if found.errors:
+        return
+
+    def has_file(rel: str, listed_in: str) -> bool:
+        path = root / BUILD_DIR / rel
+        if not path.is_file():
+            report.error(f"{BUILD_DIR}/{rel}", f"file is missing (listed in {listed_in})")
+        elif path.stat().st_size == 0:
+            report.error(f"{BUILD_DIR}/{rel}", "file is empty")
+        else:
+            return True
+        return False
+
+    for lang, cue in index["cues"].items():
+        has_file(cue["file"], f"{index_rel}, cue {lang}")
+    for entry in index["lessons"]:
+        manifest_rel = f"{BUILD_DIR}/{entry['manifest']}"
+        if not has_file(entry["manifest"], index_rel):
+            continue
+        manifest = read_json(root / manifest_rel, manifest_rel, report)
+        if manifest is None:
+            continue
+        found = validate_build_doc(root, "manifest", manifest, manifest_rel)
+        report.errors += found.errors
+        if found.errors:
+            continue
+        folder = f"{manifest['pair']}/{manifest['lesson']}"
+        for item in manifest["items"]:
+            for role in ("target", "meaning"):
+                has_file(f"{folder}/{item[f'{role}_file']}", manifest_rel)
+        if manifest["meaning_lang"] in index["cues"] and manifest["end_cue"]["file"] != index["cues"][manifest["meaning_lang"]]["file"]:
+            report.error(manifest_rel, f"end_cue.file differs from the cue of {manifest['meaning_lang']!r} in {index_rel}")
 
 
 # --------------------------------------------------------------------------- entry point
@@ -234,4 +334,5 @@ def validate_content(root: Path) -> Report:
         if lesson_path in valid_lessons:  # otherwise the lesson's own errors are already listed
             check_tuning(doc, valid_lessons[lesson_path], rel, languages, report)
 
+    check_build_files(root, report)
     return report

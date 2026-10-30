@@ -11,7 +11,7 @@ npm run format       # Prettier
 npm run build        # type-check + production build
 ```
 
-`npm run dev` and `npm run build` first copy the built lesson audio from `../content/build` into `public/lessons/` (git-ignored).
+`npm run dev` and `npm run build` first copy the built lesson audio from `../content/build` into `public/lessons/` (git-ignored). The copy starts from `index.json`, and stops with the name of any file that is missing.
 
 - `/` is the lesson screen: Start runs lesson 1 with the mic and audio (the Task 6 wiring).
 - `/speech-test.html` (dev only): shows the mic level and the speech detector, for tuning and outdoor tests.

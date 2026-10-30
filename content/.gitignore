@@ -2,8 +2,7 @@
 out/
 out-*/
 # the built lesson audio is committed: the app is deployed from it
-/build/*
-!/build/lesson-*/
+# (index.json, <pair>/<lesson>/, cues/). Only experimental builds (--out build-x) stay out.
 build-*/
 __pycache__/
 .pytest_cache/

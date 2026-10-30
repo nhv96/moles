@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "cues": {
+    "en": { "text": "The lesson is finished.", "file": "cues/en.m4a", "seconds": 1.4 }
+  },
+  "lessons": [
+    {
+      "pair": "fr-en",
+      "lesson": "lesson-02",
+      "title": "Order a coffee",
+      "target_lang": "fr",
+      "meaning_lang": "en",
+      "sentences": 2,
+      "seconds": 8.5,
+      "manifest": "fr-en/lesson-02/manifest.json"
+    }
+  ]
+}

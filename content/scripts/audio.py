@@ -63,6 +63,17 @@ def measure_loudness(wav: Path) -> float:
     return float(json.loads(log[log.rindex("{"):log.rindex("}") + 1])["input_i"])
 
 
+def probe_seconds(path: Path) -> float:
+    """Length of an audio file in seconds, as read by ffprobe. Raises ValueError if it is not audio."""
+    probe = subprocess.run(
+        ["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(path)],
+        capture_output=True, text=True)
+    try:
+        return float(probe.stdout.strip())
+    except ValueError:
+        raise ValueError(f"ffprobe cannot read {path.name} as audio") from None
+
+
 def encode_m4a(wav: Path, m4a: Path, bitrate_kbps: int) -> float:
     """Add a short silent lead-in, apply one fixed gain to reach the target loudness, limit peaks, encode AAC.
 
@@ -75,7 +86,4 @@ def encode_m4a(wav: Path, m4a: Path, bitrate_kbps: int) -> float:
     filters = f"adelay={LEAD_IN_MS}:all=1,volume={gain_db:.2f}dB,alimiter=limit={ceiling:.4f}:level=disabled"
     run_ffmpeg("-y", "-i", str(wav), "-af", filters, "-ac", "1",
                "-c:a", "aac", "-b:a", f"{bitrate_kbps}k", "-movflags", "+faststart", str(m4a))
-    probe = subprocess.run(
-        ["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(m4a)],
-        capture_output=True, text=True, check=True)
-    return float(probe.stdout.strip())
+    return probe_seconds(m4a)
