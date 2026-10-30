@@ -57,8 +57,8 @@ class FakeTicker implements Ticker {
 }
 
 const clips: ClipSet = {
-  frenchUrl: (i) => `fr${i}`,
-  meaningUrl: (i) => `en${i}`,
+  targetUrl: (i) => `t${i}`,
+  meaningUrl: (i) => `m${i}`,
   finishedCueUrl: () => 'end',
 };
 
@@ -125,25 +125,25 @@ describe('playing clips', () => {
     await audio.start();
   });
 
-  it('plays the French, the meaning and the finished cue', () => {
-    audio.apply({ type: 'playFrench', index: 2, id: 1 });
-    expect(clipEl().src).toBe('fr2');
+  it('plays the target, the meaning and the finished cue', () => {
+    audio.apply({ type: 'playTarget', index: 2, id: 1 });
+    expect(clipEl().src).toBe('t2');
     expect(clipEl().paused).toBe(false);
     audio.apply({ type: 'playMeaning', index: 2, id: 2 });
-    expect(clipEl().src).toBe('en2');
+    expect(clipEl().src).toBe('m2');
     audio.apply({ type: 'playFinishedCue', id: 3 });
     expect(clipEl().src).toBe('end');
   });
 
   it('reports the end of the current clip once', () => {
-    audio.apply({ type: 'playFrench', index: 0, id: 7 });
+    audio.apply({ type: 'playTarget', index: 0, id: 7 });
     clipEl().fireEnded();
     clipEl().fireEnded();
     expect(calls).toEqual(['ended:7']);
   });
 
   it('does not report the end of a clip that was replaced and stopped', () => {
-    audio.apply({ type: 'playFrench', index: 0, id: 1 });
+    audio.apply({ type: 'playTarget', index: 0, id: 1 });
     audio.apply({ type: 'stop' });
     clipEl().fireEnded();
     expect(calls).toEqual([]);
@@ -151,7 +151,7 @@ describe('playing clips', () => {
   });
 
   it('keeps the silent track playing after a clip ends', () => {
-    audio.apply({ type: 'playFrench', index: 0, id: 1 });
+    audio.apply({ type: 'playTarget', index: 0, id: 1 });
     clipEl().fireEnded();
     expect(silentEl().paused).toBe(false);
   });
@@ -164,22 +164,22 @@ describe('meaning speed', () => {
   });
 
   it('slows only the meaning', () => {
-    audio.apply({ type: 'playFrench', index: 0, id: 1 });
+    audio.apply({ type: 'playTarget', index: 0, id: 1 });
     expect(clipEl().playbackRate).toBe(1);
     audio.apply({ type: 'playMeaning', index: 0, id: 2 });
     expect(clipEl().playbackRate).toBe(0.8);
     expect(clipEl().defaultPlaybackRate).toBe(0.8);
-    audio.apply({ type: 'playFrench', index: 1, id: 3 });
+    audio.apply({ type: 'playTarget', index: 1, id: 3 });
     expect(clipEl().playbackRate).toBe(1);
     audio.apply({ type: 'playFinishedCue', id: 4 });
     expect(clipEl().playbackRate).toBe(1);
   });
 
-  it('changes at once while a meaning plays, and not while French plays', () => {
+  it('changes at once while a meaning plays, and not while target plays', () => {
     audio.apply({ type: 'playMeaning', index: 0, id: 1 });
     audio.setMeaningRate(1.2);
     expect(clipEl().playbackRate).toBe(1.2);
-    audio.apply({ type: 'playFrench', index: 0, id: 2 });
+    audio.apply({ type: 'playTarget', index: 0, id: 2 });
     audio.setMeaningRate(0.9);
     expect(clipEl().playbackRate).toBe(1);
   });
@@ -188,7 +188,7 @@ describe('meaning speed', () => {
 describe('headphone buttons', () => {
   beforeEach(async () => {
     await audio.start();
-    audio.apply({ type: 'playFrench', index: 0, id: 1 });
+    audio.apply({ type: 'playTarget', index: 0, id: 1 });
   });
 
   it('maps previous to repeat and next to next', () => {
@@ -219,7 +219,7 @@ describe('headphone buttons', () => {
   it('holds a new clip until resumed while paused', () => {
     press('pause');
     audio.apply({ type: 'playMeaning', index: 0, id: 2 });
-    expect(clipEl().src).toBe('en0');
+    expect(clipEl().src).toBe('m0');
     expect(clipEl().paused).toBe(true);
     press('pause');
     expect(clipEl().paused).toBe(false);
@@ -230,7 +230,7 @@ describe('watchdog', () => {
   beforeEach(async () => {
     await audio.start();
     clipEl().duration = 3;
-    audio.apply({ type: 'playFrench', index: 0, id: 1 });
+    audio.apply({ type: 'playTarget', index: 0, id: 1 });
   });
 
   it('leaves a clip alone while its time moves', () => {
@@ -251,7 +251,7 @@ describe('watchdog', () => {
     ticker.advance(2000);
     expect(clipEl().playCalls).toBe(plays + 2);
     expect(clipEl().currentTime).toBe(0);
-    expect(clipEl().src).toBe('fr0');
+    expect(clipEl().src).toBe('t0');
   });
 
   it('counts a clip stuck at its very end as ended', () => {

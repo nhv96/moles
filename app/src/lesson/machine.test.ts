@@ -65,11 +65,11 @@ beforeEach(() => {
 });
 
 describe('start', () => {
-  it('plays the first French sentence', () => {
+  it('plays the first target sentence', () => {
     expect(machine.state).toEqual({ phase: 'idle', index: 0 });
     machine.start();
-    expect(machine.state).toEqual({ phase: 'playingFrench', index: 0 });
-    expect(types()).toEqual(['playFrench0']);
+    expect(machine.state).toEqual({ phase: 'playingTarget', index: 0 });
+    expect(types()).toEqual(['playTarget0']);
   });
 
   it('restarts from the first sentence while running', () => {
@@ -77,8 +77,8 @@ describe('start', () => {
     endClip();
     machine.next();
     machine.start();
-    expect(machine.state).toEqual({ phase: 'playingFrench', index: 0 });
-    expect(types().at(-1)).toBe('playFrench0');
+    expect(machine.state).toEqual({ phase: 'playingTarget', index: 0 });
+    expect(types().at(-1)).toBe('playTarget0');
   });
 });
 
@@ -88,7 +88,7 @@ describe('waiting for the learner', () => {
     endClip();
   });
 
-  it('waits after the French ends', () => {
+  it('waits after the target ends', () => {
     expect(machine.state.phase).toBe('waiting');
   });
 
@@ -164,16 +164,16 @@ describe('waiting for the learner', () => {
   });
 });
 
-describe('speech during the French clip', () => {
-  it('is ignored while the French plays', () => {
+describe('speech during the target clip', () => {
+  it('is ignored while the target plays', () => {
     machine.start();
     machine.speechStart();
     machine.speechEnd();
     clock.advance(60000);
-    expect(machine.state.phase).toBe('playingFrench');
+    expect(machine.state.phase).toBe('playingTarget');
   });
 
-  it('counts as speech if the learner is still speaking when the French ends', () => {
+  it('counts as speech if the learner is still speaking when the target ends', () => {
     machine.start();
     machine.speechStart();
     endClip();
@@ -206,8 +206,8 @@ describe('the meaning', () => {
 
   it('is followed by the next sentence', () => {
     endClip();
-    expect(machine.state).toEqual({ phase: 'playingFrench', index: 1 });
-    expect(types().at(-1)).toBe('playFrench1');
+    expect(machine.state).toEqual({ phase: 'playingTarget', index: 1 });
+    expect(types().at(-1)).toBe('playTarget1');
   });
 
   it('starts the next wait fresh', () => {
@@ -220,26 +220,26 @@ describe('the meaning', () => {
 });
 
 describe('repeat', () => {
-  it('replays the French while waiting, then the loop continues', () => {
+  it('replays the target while waiting, then the loop continues', () => {
     machine.start();
     endClip();
     machine.speechStart();
     machine.repeat();
-    expect(machine.state).toEqual({ phase: 'playingFrench', index: 0 });
-    expect(types().at(-1)).toBe('playFrench0');
+    expect(machine.state).toEqual({ phase: 'playingTarget', index: 0 });
+    expect(types().at(-1)).toBe('playTarget0');
     machine.speechEnd();
     clock.advance(60000);
-    expect(machine.state.phase).toBe('playingFrench');
+    expect(machine.state.phase).toBe('playingTarget');
     endClip();
     expect(machine.state.phase).toBe('waiting');
     clock.advance(15000);
     expect(machine.state.phase).toBe('playingMeaning');
   });
 
-  it('restarts the French while it plays', () => {
+  it('restarts the target while it plays', () => {
     machine.start();
     machine.repeat();
-    expect(types()).toEqual(['playFrench0', 'playFrench0']);
+    expect(types()).toEqual(['playTarget0', 'playTarget0']);
   });
 
   it('ignores the old clip ending after a repeat', () => {
@@ -247,7 +247,7 @@ describe('repeat', () => {
     const oldId = lastId();
     machine.repeat();
     machine.clipEnded(oldId);
-    expect(machine.state.phase).toBe('playingFrench');
+    expect(machine.state.phase).toBe('playingTarget');
   });
 
   it('cancels the pending wait', () => {
@@ -256,7 +256,7 @@ describe('repeat', () => {
     clock.advance(14000);
     machine.repeat();
     clock.advance(5000);
-    expect(machine.state.phase).toBe('playingFrench');
+    expect(machine.state.phase).toBe('playingTarget');
   });
 });
 
@@ -265,14 +265,14 @@ describe('next', () => {
     machine.start();
     endClip();
     machine.next();
-    expect(machine.state).toEqual({ phase: 'playingFrench', index: 1 });
-    expect(types()).toEqual(['playFrench0', 'playFrench1']);
+    expect(machine.state).toEqual({ phase: 'playingTarget', index: 1 });
+    expect(types()).toEqual(['playTarget0', 'playTarget1']);
   });
 
-  it('skips to the next sentence while the French plays', () => {
+  it('skips to the next sentence while the target plays', () => {
     machine.start();
     machine.next();
-    expect(machine.state).toEqual({ phase: 'playingFrench', index: 1 });
+    expect(machine.state).toEqual({ phase: 'playingTarget', index: 1 });
   });
 
   it('cancels the pending wait', () => {
@@ -280,7 +280,7 @@ describe('next', () => {
     endClip();
     machine.next();
     clock.advance(60000);
-    expect(machine.state).toEqual({ phase: 'playingFrench', index: 1 });
+    expect(machine.state).toEqual({ phase: 'playingTarget', index: 1 });
   });
 
   it('on the last sentence plays the finished cue', () => {
@@ -297,7 +297,7 @@ describe('end of the lesson', () => {
   function playToTheLastMeaning(): void {
     machine.start();
     for (let i = 0; i < SENTENCES; i++) {
-      endClip(); // French
+      endClip(); // target
       clock.advance(15000);
       if (i < SENTENCES - 1) endClip(); // meaning
     }
@@ -344,7 +344,7 @@ describe('end of the lesson', () => {
     endClip();
     expect(machine.state.phase).toBe('finished');
     machine.start();
-    expect(machine.state).toEqual({ phase: 'playingFrench', index: 0 });
+    expect(machine.state).toEqual({ phase: 'playingTarget', index: 0 });
   });
 });
 
@@ -358,7 +358,7 @@ describe('pause', () => {
     clock.advance(10000);
     machine.pause();
     clock.advance(60000);
-    expect(types()).toEqual(['playFrench0']);
+    expect(types()).toEqual(['playTarget0']);
     expect(machine.state.phase).toBe('waiting');
   });
 
@@ -368,7 +368,7 @@ describe('pause', () => {
     clock.advance(2000);
     machine.pause();
     clock.advance(60000);
-    expect(types()).toEqual(['playFrench0']);
+    expect(types()).toEqual(['playTarget0']);
   });
 
   it('gives a full new wait on resume', () => {
@@ -376,9 +376,9 @@ describe('pause', () => {
     machine.pause();
     machine.resume();
     clock.advance(14999);
-    expect(types()).toEqual(['playFrench0']);
+    expect(types()).toEqual(['playTarget0']);
     clock.advance(1);
-    expect(types()).toEqual(['playFrench0', 'playMeaning0']);
+    expect(types()).toEqual(['playTarget0', 'playMeaning0']);
   });
 
   it('ignores speech starting and ending while paused, then waits full on resume', () => {
@@ -386,12 +386,12 @@ describe('pause', () => {
     machine.speechStart();
     machine.speechEnd();
     clock.advance(60000);
-    expect(types()).toEqual(['playFrench0']);
+    expect(types()).toEqual(['playTarget0']);
     machine.resume();
     clock.advance(14999);
-    expect(types()).toEqual(['playFrench0']);
+    expect(types()).toEqual(['playTarget0']);
     clock.advance(1);
-    expect(types()).toEqual(['playFrench0', 'playMeaning0']);
+    expect(types()).toEqual(['playTarget0', 'playMeaning0']);
   });
 
   it('on resume while the learner speaks, waits for the speech to end', () => {
@@ -399,22 +399,22 @@ describe('pause', () => {
     machine.speechStart();
     machine.resume();
     clock.advance(14999);
-    expect(types()).toEqual(['playFrench0']);
+    expect(types()).toEqual(['playTarget0']);
     machine.speechEnd();
     clock.advance(3000);
-    expect(types()).toEqual(['playFrench0', 'playMeaning0']);
+    expect(types()).toEqual(['playTarget0', 'playMeaning0']);
   });
 
-  it('starts no wait when the French ends while paused, until resume', () => {
-    machine.repeat(); // playing French again
+  it('starts no wait when the target ends while paused, until resume', () => {
+    machine.repeat(); // playing target again
     machine.pause();
     endClip();
     expect(machine.state.phase).toBe('waiting');
     clock.advance(60000);
-    expect(types()).toEqual(['playFrench0', 'playFrench0']);
+    expect(types()).toEqual(['playTarget0', 'playTarget0']);
     machine.resume();
     clock.advance(15000);
-    expect(types()).toEqual(['playFrench0', 'playFrench0', 'playMeaning0']);
+    expect(types()).toEqual(['playTarget0', 'playTarget0', 'playMeaning0']);
   });
 
   it('ignores pause and resume called twice', () => {
@@ -423,7 +423,7 @@ describe('pause', () => {
     machine.resume();
     machine.resume();
     clock.advance(15000);
-    expect(types()).toEqual(['playFrench0', 'playMeaning0']);
+    expect(types()).toEqual(['playTarget0', 'playMeaning0']);
   });
 });
 
@@ -438,7 +438,7 @@ describe('halt', () => {
     clock.advance(60000);
     machine.repeat();
     machine.next();
-    expect(types()).toEqual(['playFrench0']);
+    expect(types()).toEqual(['playTarget0']);
     expect(machine.state.phase).toBe('finished');
   });
 });

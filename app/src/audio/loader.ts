@@ -2,11 +2,12 @@
 // With the screen locked the page may not be able to fetch, so nothing is
 // fetched while the lesson runs.
 
+import { type BuildIndex, parseIndex } from './index';
 import { type Manifest, parseManifest } from './manifest';
 
 /** Where the player gets the URL of each clip. */
 export interface ClipSet {
-  frenchUrl(index: number): string;
+  targetUrl(index: number): string;
   meaningUrl(index: number): string;
   finishedCueUrl(): string;
 }
@@ -26,37 +27,57 @@ const browserDeps: LoaderDeps = {
   createObjectURL: (blob) => URL.createObjectURL(blob),
 };
 
+/** Downloads index.json from the lessons folder (for example "/lessons/"). */
+export async function loadIndex(
+  lessonsUrl: string,
+  deps: LoaderDeps = browserDeps,
+): Promise<BuildIndex> {
+  const response = await deps.fetch(lessonsUrl + 'index.json');
+  if (!response.ok)
+    throw new Error(`Could not load index.json (HTTP ${response.status})`);
+  return parseIndex(await response.json());
+}
+
+/**
+ * Downloads one lesson. `manifestPath` comes from the index and is relative to the
+ * lessons folder; the clips are next to the manifest, the end cue is named from the lessons folder.
+ */
 export async function loadLesson(
-  baseUrl: string,
+  lessonsUrl: string,
+  manifestPath: string,
   deps: LoaderDeps = browserDeps,
 ): Promise<LoadedLesson> {
-  const get = async (name: string): Promise<Response> => {
-    const response = await deps.fetch(baseUrl + name);
+  const get = async (path: string): Promise<Response> => {
+    const response = await deps.fetch(lessonsUrl + path);
     if (!response.ok)
-      throw new Error(`Could not load ${name} (HTTP ${response.status})`);
+      throw new Error(`Could not load ${path} (HTTP ${response.status})`);
     return response;
   };
 
-  const manifest = parseManifest(await (await get('manifest.json')).json());
+  const manifest = parseManifest(await (await get(manifestPath)).json());
+  const folder = manifestPath.slice(0, manifestPath.lastIndexOf('/') + 1);
 
   const urls = new Map<string, string>();
-  const names = [
-    ...manifest.items.flatMap((item) => [item.fr_file, item.en_file]),
-    manifest.finished_cue.file,
+  const paths = [
+    ...manifest.items.flatMap((item) => [
+      folder + item.target_file,
+      folder + item.meaning_file,
+    ]),
+    manifest.end_cue.file,
   ];
   await Promise.all(
-    names.map(async (name) => {
-      const data = await (await get(name)).arrayBuffer();
+    paths.map(async (path) => {
+      const data = await (await get(path)).arrayBuffer();
       urls.set(
-        name,
+        path,
         deps.createObjectURL(new Blob([data], { type: 'audio/mp4' })),
       );
     }),
   );
 
-  const url = (name: string): string => {
-    const found = urls.get(name);
-    if (!found) throw new Error(`Clip not loaded: ${name}`);
+  const url = (path: string): string => {
+    const found = urls.get(path);
+    if (!found) throw new Error(`Clip not loaded: ${path}`);
     return found;
   };
   const item = (index: number) => {
@@ -68,9 +89,9 @@ export async function loadLesson(
   return {
     manifest,
     clips: {
-      frenchUrl: (index) => url(item(index).fr_file),
-      meaningUrl: (index) => url(item(index).en_file),
-      finishedCueUrl: () => url(manifest.finished_cue.file),
+      targetUrl: (index) => url(folder + item(index).target_file),
+      meaningUrl: (index) => url(folder + item(index).meaning_file),
+      finishedCueUrl: () => url(manifest.end_cue.file),
     },
   };
 }

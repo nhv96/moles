@@ -206,6 +206,10 @@ Done when: a clean build and sync produces a working `public/lessons` folder, an
 
 Done when: lint, format check and tests pass; lesson 1 plays from the picker on the phone through the tunnel as before; the deployed app still works after the merge.
 
+**Decisions on 2026-10-30.** The picker is a pair dropdown (shown as "French → English", names from the browser's `Intl.DisplayNames`, so the index needs no display names) plus a list of that pair's lessons with sentence count and length. It is always shown while no lesson runs, even with one lesson. The last choice is remembered in the browser (`localStorage`, optional). Only the chosen lesson is downloaded. All French-specific names in the app were renamed to target/meaning (code, tests and screen ids); the home-screen title "Leçon" in `index.html` was left alone.
+
+**Result (2026-10-30).** `audio/manifest.ts` reads the new manifest and refuses a `schema_version` it does not know; `audio/index.ts` reads `index.json`; `loader.ts` has `loadIndex` and `loadLesson(lessonsUrl, manifestPath)` (clips next to the manifest, the end cue named from the lessons folder); `picker.ts` holds the tested picker logic and `main.ts` the screen. Checked in headless Chrome against the production build: the picker shows and lesson 1 is loaded. Playing it on the phone is still to be checked.
+
 ### Task 7: trial run with a new AI lesson
 
 Generate a real second lesson with the prompt, check it with `validate`, sweep, tune, build, and play it in the app. This tests the prompt and schema in practice. Fix whatever it shows.

@@ -19,7 +19,7 @@ export interface DevSettings {
   startMs: number;
   /** The level must stay below the end threshold this long to end the speech. */
   hangMs: number;
-  /** Playback speed of the English meaning (1 = normal). */
+  /** Playback speed of the meaning (1 = normal). */
   meaningRate: number;
 }
 
