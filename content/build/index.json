@@ -27,6 +27,16 @@
       "sentences": 9,
       "seconds": 30.49,
       "manifest": "fr-en/lesson-02/manifest.json"
+    },
+    {
+      "pair": "fr-en",
+      "lesson": "lesson-03",
+      "title": "Welcoming a new friend: age and hobbies",
+      "target_lang": "fr",
+      "meaning_lang": "en",
+      "sentences": 10,
+      "seconds": 37.28,
+      "manifest": "fr-en/lesson-03/manifest.json"
     }
   ]
 }
