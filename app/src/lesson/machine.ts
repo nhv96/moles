@@ -14,13 +14,13 @@ export interface Settings {
   /** Silence after the learner stops speaking that ends the wait. */
   silenceMs: number;
   /**
-   * Longest the wait may last without the learner finishing: either no speech
-   * at all since the wait began, or one stretch of non-stop speech.
+   * Longest one stretch of non-stop speech (or noise) may last before the
+   * wait ends.
    */
   maxWaitMs: number;
 }
 
-export const DEFAULT_SETTINGS: Settings = { silenceMs: 3000, maxWaitMs: 15000 };
+export const DEFAULT_SETTINGS: Settings = { silenceMs: 4000, maxWaitMs: 15000 };
 
 /** Each play effect replaces whatever clip is playing. `id` comes back in `clipEnded`. */
 export type Effect =
@@ -174,7 +174,7 @@ export class LessonMachine {
   private startWait(): void {
     if (this.paused) return;
     if (this.speaking) this.onSpeechStartWhileWaiting();
-    else this.armMaxWait();
+    else this.armSilence();
   }
 
   private onSpeechStartWhileWaiting(): void {
@@ -186,6 +186,10 @@ export class LessonMachine {
   private onSpeechEndWhileWaiting(): void {
     if (this.paused) return;
     this.clearTimers();
+    this.armSilence();
+  }
+
+  private armSilence(): void {
     this.silenceTimer = this.clock.setTimeout(
       () => this.playMeaning(),
       this.settings.silenceMs,

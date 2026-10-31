@@ -7,7 +7,7 @@ import { DEFAULT_SETTINGS } from './lesson/machine';
 export interface DevSettings {
   /** Silence after the learner stops speaking that ends the wait. */
   silenceMs: number;
-  /** Longest wait without speech, or of one stretch of non-stop speech. */
+  /** Longest one stretch of non-stop speech (or noise) before the wait ends. */
   maxWaitMs: number;
   /** Speech starts above noise * startRatio. */
   startRatio: number;

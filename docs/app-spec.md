@@ -22,9 +22,9 @@ A mobile-friendly app for learning spoken French by *shadowing*: you hear a sent
 
 ### Per-sentence loop (Decided)
 1. The French sentence plays.
-2. The app waits for you to speak. Each time you speak, it pauses and keeps waiting.
-3. After 3 seconds of silence, the English meaning plays. The meaning cannot be interrupted, and speech during it is ignored.
-4. If you never speak, the meaning plays after 15 seconds. The same 15 seconds also ends the wait if you (or noise) keep going without a pause for that long.
+2. The app waits for you to speak. Each time you speak, the 4-second silence count starts again.
+3. After 4 seconds of silence, the English meaning plays. The count starts as soon as the French ends, so if you say nothing, the meaning plays 4 seconds later. The meaning cannot be interrupted, and speech during it is ignored.
+4. The 15-second maximum ends the wait if you (or noise) keep going without a pause for that long.
 5. The next sentence starts.
 6. After the last sentence, a spoken cue says the lesson is finished, then the app stops until you start a lesson again.
 
@@ -39,7 +39,7 @@ A mobile-friendly app for learning spoken French by *shadowing*: you hear a sent
 - **Volume buttons:** not used for control. iOS handles them and never tells the page. Volume quality is checked after the prototype works.
 
 ### Developer settings screen (Decided)
-Visible in development mode only. It lets you tweak values live without rebuilding: silence length (3s), maximum wait (15s), speech threshold, meaning voice speed, and so on.
+Visible in development mode only. It lets you tweak values live without rebuilding: silence length (4s), maximum wait (15s), speech threshold, meaning voice speed, and so on.
 
 ### No grading (Decided)
 No scores, no right or wrong, no streaks, no progress tracking. You can start a new lesson without finishing the current one.
@@ -127,7 +127,7 @@ Page: `headphone-test.html` (branch `test/headphone-buttons`). iPhone, iOS 18.7,
 ## 5. Limitations and risks
 
 1. **Platform risk.** Background audio and mic behavior in iOS web apps is controlled by Apple and may change.
-2. **Noise.** Wind, traffic and chores can look like speech, so the app might wait for a sentence to end that never ends. The 15-second fallback covers it.
+2. **Noise.** Wind, traffic and chores can look like speech, so the app might wait for a sentence to end that never ends. The 15-second maximum covers it.
 3. **Voice commands** are unproven in the browser.
 4. **Bluetooth headphones** often drop to phone-call audio quality while the mic is active. In the test, the beeps stayed clear on the user's Bluetooth headphones. Real speech and the meaning voice were checked in the field test (2026-10-27): no issues.
 5. **Interruptions** (phone call, Siri, notification) can stop audio and the mic. The app must detect this and resume cleanly. Untested; the test plan is `docs/interruption-test-plan.md`.

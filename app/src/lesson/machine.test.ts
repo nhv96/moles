@@ -92,8 +92,8 @@ describe('waiting for the learner', () => {
     expect(machine.state.phase).toBe('waiting');
   });
 
-  it('plays the meaning after the maximum wait if the learner never speaks', () => {
-    clock.advance(14999);
+  it('plays the meaning after the silence length if the learner never speaks', () => {
+    clock.advance(2999);
     expect(machine.state.phase).toBe('waiting');
     clock.advance(1);
     expect(machine.state.phase).toBe('playingMeaning');
@@ -123,12 +123,14 @@ describe('waiting for the learner', () => {
     expect(machine.state.phase).toBe('playingMeaning');
   });
 
-  it('does not use the 15 s never-spoke timer once the learner has spoken', () => {
-    clock.advance(10000);
+  it('restarts the silence wait when the learner speaks before it runs out', () => {
+    clock.advance(2000);
     machine.speechStart();
     machine.speechEnd();
     clock.advance(2999);
     expect(machine.state.phase).toBe('waiting');
+    clock.advance(1);
+    expect(machine.state.phase).toBe('playingMeaning');
   });
 
   it('ends the wait after one stretch of non-stop speech reaches the maximum', () => {
@@ -189,7 +191,7 @@ describe('the meaning', () => {
   beforeEach(() => {
     machine.start();
     endClip();
-    clock.advance(15000);
+    clock.advance(3000);
   });
 
   it('cannot be interrupted by speech, repeat or next', () => {
@@ -214,7 +216,7 @@ describe('the meaning', () => {
     endClip();
     endClip();
     expect(machine.state).toEqual({ phase: 'waiting', index: 1 });
-    clock.advance(15000);
+    clock.advance(3000);
     expect(machine.state.phase).toBe('playingMeaning');
   });
 });
@@ -232,7 +234,7 @@ describe('repeat', () => {
     expect(machine.state.phase).toBe('playingTarget');
     endClip();
     expect(machine.state.phase).toBe('waiting');
-    clock.advance(15000);
+    clock.advance(3000);
     expect(machine.state.phase).toBe('playingMeaning');
   });
 
@@ -253,7 +255,7 @@ describe('repeat', () => {
   it('cancels the pending wait', () => {
     machine.start();
     endClip();
-    clock.advance(14000);
+    clock.advance(2000);
     machine.repeat();
     clock.advance(5000);
     expect(machine.state.phase).toBe('playingTarget');
@@ -354,8 +356,8 @@ describe('pause', () => {
     endClip(); // waiting
   });
 
-  it('stops the max wait from running out', () => {
-    clock.advance(10000);
+  it('stops the silence wait from running out', () => {
+    clock.advance(2000);
     machine.pause();
     clock.advance(60000);
     expect(types()).toEqual(['playTarget0']);
@@ -372,10 +374,10 @@ describe('pause', () => {
   });
 
   it('gives a full new wait on resume', () => {
-    clock.advance(10000);
+    clock.advance(2000);
     machine.pause();
     machine.resume();
-    clock.advance(14999);
+    clock.advance(2999);
     expect(types()).toEqual(['playTarget0']);
     clock.advance(1);
     expect(types()).toEqual(['playTarget0', 'playMeaning0']);
@@ -388,7 +390,7 @@ describe('pause', () => {
     clock.advance(60000);
     expect(types()).toEqual(['playTarget0']);
     machine.resume();
-    clock.advance(14999);
+    clock.advance(2999);
     expect(types()).toEqual(['playTarget0']);
     clock.advance(1);
     expect(types()).toEqual(['playTarget0', 'playMeaning0']);
