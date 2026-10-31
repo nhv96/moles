@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "lesson": "lesson-03",
+  "default_speed": 0.9,
+  "meaning_speed": 0.9,
+  "sentences": {
+    "s01": { "speed": 0.87, "mode": "phrases" },
+    "s02": { "speed": 0.89, "mode": "phrases" },
+    "s03": { "speed": 0.87, "mode": "whole" },
+    "s04": { "speed": 0.87, "mode": "whole" },
+    "s05": { "speed": 0.87, "mode": "whole" },
+    "s06": { "speed": 0.8, "mode": "whole" },
+    "s07": { "speed": 0.86, "mode": "phrases" },
+    "s08": { "speed": 0.82, "mode": "whole" },
+    "s09": { "speed": 0.89, "mode": "whole" },
+    "s10": { "speed": 0.86, "mode": "phrases" }
+  }
+}

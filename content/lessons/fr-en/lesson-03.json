@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "id": "lesson-03",
+  "target_lang": "fr",
+  "meaning_lang": "en",
+  "title": "Welcoming a new friend: age and hobbies",
+  "persona": "Vinh",
+  "register": "tu",
+  "accent": "France French",
+  "speakers": {
+    "a": "Host",
+    "b": "Guest"
+  },
+  "sentences": [
+    {
+      "id": "s01",
+      "speaker": "a",
+      "target": "Bienvenue ! Moi, c'est Vinh.",
+      "meaning": "Welcome! I'm Vinh.",
+      "phrases": ["Bienvenue !", "Moi,", "c'est Vinh."]
+    },
+    {
+      "id": "s02",
+      "speaker": "b",
+      "target": "Merci, moi c'est Sam.",
+      "meaning": "Thanks, I'm Sam.",
+      "phrases": ["Merci,", "moi c'est Sam."]
+    },
+    {
+      "id": "s03",
+      "speaker": "a",
+      "target": "Tu viens d'où ?",
+      "meaning": "Where do you come from?"
+    },
+    {
+      "id": "s04",
+      "speaker": "b",
+      "target": "Je viens d'Italie.",
+      "meaning": "I come from Italy."
+    },
+    {
+      "id": "s05",
+      "speaker": "a",
+      "target": "Tu as quel âge ?",
+      "meaning": "How old are you?"
+    },
+    {
+      "id": "s06",
+      "speaker": "b",
+      "target": "J'ai vingt-cinq ans.",
+      "meaning": "I'm twenty-five years old."
+    },
+    {
+      "id": "s07",
+      "speaker": "a",
+      "target": "Moi, j'ai trente ans.",
+      "meaning": "I'm thirty years old.",
+      "phrases": ["Moi,", "j'ai trente ans."]
+    },
+    {
+      "id": "s08",
+      "speaker": "a",
+      "target": "Tu aimes faire quoi ?",
+      "meaning": "What do you like to do?"
+    },
+    {
+      "id": "s09",
+      "speaker": "b",
+      "target": "J'aime lire et nager.",
+      "meaning": "I like reading and swimming."
+    },
+    {
+      "id": "s10",
+      "speaker": "a",
+      "target": "Super ! Moi, j'aime cuisiner.",
+      "meaning": "Great! I like cooking.",
+      "phrases": ["Super !", "Moi, j'aime cuisiner."]
+    }
+  ]
+}

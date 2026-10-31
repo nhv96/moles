@@ -1,0 +1,144 @@
+{
+  "schema_version": 1,
+  "lesson": "lesson-03",
+  "pair": "fr-en",
+  "target_lang": "fr",
+  "meaning_lang": "en",
+  "title": "Welcoming a new friend: age and hobbies",
+  "speakers": {
+    "a": "Host",
+    "b": "Guest"
+  },
+  "target_voice": "ff_siwis",
+  "meaning_voice": "af_heart",
+  "format": "aac-m4a",
+  "bitrate_kbps": 96,
+  "loudness_lufs": -16.0,
+  "items": [
+    {
+      "id": "s01",
+      "speaker": "a",
+      "target": "Bienvenue ! Moi, c'est Vinh.",
+      "meaning": "Welcome! I'm Vinh.",
+      "speed": 0.87,
+      "mode": "phrases",
+      "target_file": "s01_target.m4a",
+      "meaning_file": "s01_meaning.m4a",
+      "target_seconds": 2.53,
+      "meaning_seconds": 2.12
+    },
+    {
+      "id": "s02",
+      "speaker": "b",
+      "target": "Merci, moi c'est Sam.",
+      "meaning": "Thanks, I'm Sam.",
+      "speed": 0.89,
+      "mode": "phrases",
+      "target_file": "s02_target.m4a",
+      "meaning_file": "s02_meaning.m4a",
+      "target_seconds": 2.08,
+      "meaning_seconds": 1.95
+    },
+    {
+      "id": "s03",
+      "speaker": "a",
+      "target": "Tu viens d'où ?",
+      "meaning": "Where do you come from?",
+      "speed": 0.87,
+      "mode": "whole",
+      "target_file": "s03_target.m4a",
+      "meaning_file": "s03_meaning.m4a",
+      "target_seconds": 1.09,
+      "meaning_seconds": 1.85
+    },
+    {
+      "id": "s04",
+      "speaker": "b",
+      "target": "Je viens d'Italie.",
+      "meaning": "I come from Italy.",
+      "speed": 0.87,
+      "mode": "whole",
+      "target_file": "s04_target.m4a",
+      "meaning_file": "s04_meaning.m4a",
+      "target_seconds": 1.23,
+      "meaning_seconds": 2.1
+    },
+    {
+      "id": "s05",
+      "speaker": "a",
+      "target": "Tu as quel âge ?",
+      "meaning": "How old are you?",
+      "speed": 0.87,
+      "mode": "whole",
+      "target_file": "s05_target.m4a",
+      "meaning_file": "s05_meaning.m4a",
+      "target_seconds": 1.25,
+      "meaning_seconds": 1.8
+    },
+    {
+      "id": "s06",
+      "speaker": "b",
+      "target": "J'ai vingt-cinq ans.",
+      "meaning": "I'm twenty-five years old.",
+      "speed": 0.8,
+      "mode": "whole",
+      "target_file": "s06_target.m4a",
+      "meaning_file": "s06_meaning.m4a",
+      "target_seconds": 1.54,
+      "meaning_seconds": 2.33
+    },
+    {
+      "id": "s07",
+      "speaker": "a",
+      "target": "Moi, j'ai trente ans.",
+      "meaning": "I'm thirty years old.",
+      "speed": 0.86,
+      "mode": "phrases",
+      "target_file": "s07_target.m4a",
+      "meaning_file": "s07_meaning.m4a",
+      "target_seconds": 1.87,
+      "meaning_seconds": 2.17
+    },
+    {
+      "id": "s08",
+      "speaker": "a",
+      "target": "Tu aimes faire quoi ?",
+      "meaning": "What do you like to do?",
+      "speed": 0.82,
+      "mode": "whole",
+      "target_file": "s08_target.m4a",
+      "meaning_file": "s08_meaning.m4a",
+      "target_seconds": 1.32,
+      "meaning_seconds": 1.88
+    },
+    {
+      "id": "s09",
+      "speaker": "b",
+      "target": "J'aime lire et nager.",
+      "meaning": "I like reading and swimming.",
+      "speed": 0.89,
+      "mode": "whole",
+      "target_file": "s09_target.m4a",
+      "meaning_file": "s09_meaning.m4a",
+      "target_seconds": 1.32,
+      "meaning_seconds": 2.33
+    },
+    {
+      "id": "s10",
+      "speaker": "a",
+      "target": "Super ! Moi, j'aime cuisiner.",
+      "meaning": "Great! I like cooking.",
+      "speed": 0.86,
+      "mode": "phrases",
+      "target_file": "s10_target.m4a",
+      "meaning_file": "s10_meaning.m4a",
+      "target_seconds": 2.37,
+      "meaning_seconds": 2.15
+    }
+  ],
+  "end_cue": {
+    "text": "The lesson is finished.",
+    "file": "cues/en.m4a",
+    "seconds": 2.02
+  }
+}
