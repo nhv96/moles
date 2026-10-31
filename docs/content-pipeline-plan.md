@@ -243,5 +243,5 @@ Done when: `sv-en` has a lesson the user judged good enough by listening. Likely
 - **Speeds are per engine and voice.** The 0.85 to 0.92 range was found for Kokoro's French voice. Another engine needs its own sweep and its own defaults in `languages.json`.
 - **Schema changes later.** `schema_version` is in from the start. The migration approach for old lessons is not decided and is not needed until the first schema change.
 - **Voices for the two speakers.** In a conversation, both speakers use the same voice for now (Kokoro has only one French voice). The `speaker` field is recorded so that a second voice, or showing who speaks, can be added later without changing the lesson files.
-- **Vietnamese end cue.** `languages.json` has the text "Bài học đã kết thúc." as a proposal; the user, as the Vietnamese speaker, confirms or changes the wording before recording it. French has no `end_cue` yet, because it is not planned as a meaning language.
+- **Vietnamese end cue.** Confirmed by the user on 2026-10-31: "Bài học đã kết thúc." (in `languages.json`). French has no `end_cue` yet, because it is not planned as a meaning language.
 - **Where the shared cue audio is stored.** Decided in task 5: `build/cues/<lang>.m4a`, listed in `index.json` under `cues`, and also named by each manifest's `end_cue.file`.

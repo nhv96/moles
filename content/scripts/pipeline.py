@@ -105,7 +105,7 @@ def build_parser() -> argparse.ArgumentParser:
     validate.set_defaults(func=cmd_validate)
 
     sweep = sub.add_parser("sweep", parents=[common, lesson_arg], help="listening test at several speeds")
-    sweep.add_argument("--speeds", nargs="+", type=float, default=[0.6, 0.7, 0.8, 0.9, 1.0])
+    sweep.add_argument("--speeds", nargs="+", type=float, default=[0.8, 0.9, 1.0])
     sweep.add_argument("--out", type=Path, help="output folder (default: out/ in the content folder)")
     sweep.set_defaults(func=cmd_sweep)
 

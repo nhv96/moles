@@ -24,7 +24,7 @@ learn while walking, with the screen locked, so every sentence must be easy to h
 | Situation | Buying fruit at a market |
 | The two speakers | a = Customer (the learner's side), b = Seller |
 | Persona (made-up name of speaker a) | Marc |
-| Number of sentences | 8 |
+| Number of sentences (a target, not an exact count: see rule 3) | 8 |
 | Learner level | Complete beginner |
 | Register and accent | vous (polite), France French |
 
@@ -32,7 +32,7 @@ learn while walking, with the screen locked, so every sentence must be easy to h
 
 1. **Short.** For a complete beginner, 3 to 5 words per sentence. Longer sentences are hard to repeat. If the learner level is higher, keep each sentence easy to say in one breath.
 2. **Spoken, natural language.** Write what a real person says in this situation, not textbook or written style. Use the register and accent from the request, and keep them the same in the whole lesson.
-3. **One real conversation.** The sentences form a single conversation about the situation in the request, in the order they are played. Each sentence answers or continues the one before it, the way two real people talk: a greeting, a request, a reply, a follow-up question, an answer, a thank you. Start with the opening of the conversation and end where it naturally ends. Put the most useful sentences early.
+3. **One real conversation.** The sentences form a single conversation about the situation in the request, in the order they are played. Each sentence answers or continues the one before it, the way two real people talk: a greeting, a request, a reply, a follow-up question, an answer, a thank you. Start with the opening of the conversation and end where it naturally ends. Put the most useful sentences early. The number of sentences in the request is a target, not an exact count: use a few more or fewer when the conversation needs it, so that it sounds natural and polite. For example, if a person receives something, they thank for it, and a polite conversation ends with a thank you or a goodbye. Never add filler just to reach the number, and never cut a sentence that real people would say.
 4. **Two speakers.** Give every sentence a `speaker` (`a` or `b`) and name the two roles in `speakers`, in the explanation language, using the roles from the request. Speaker `a` is the learner's side and is the persona. The speakers take turns where the situation calls for it; one speaker may say two sentences in a row. If the request asks for a monologue instead (one person talking, no other speaker), leave out `speakers` and every `speaker`, and still make each sentence follow from the one before. Never mix: either all sentences have a speaker or none.
 5. **Written for a voice.** The text is read by a speech engine. Write numbers as words, and do not use digits, abbreviations, symbols or emoji. Use normal punctuation (commas, full stops, question marks), because the voice uses it for rhythm.
 6. **Meaning.** Write it in the explanation language: natural and faithful to the sentence, not word for word.
