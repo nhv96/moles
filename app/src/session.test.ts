@@ -163,16 +163,16 @@ describe('the loop', () => {
     expect(applied.at(-1)).toMatchObject({ type: 'playMeaning', index: 0 });
   });
 
-  it('plays the meaning after the max wait when the learner is silent', () => {
+  it('plays the meaning after the silence length when the learner is silent', () => {
     audioEvents.clipEnded(lastId());
-    clock.advance(15000);
+    clock.advance(3000);
     expect(applied.at(-1)).toMatchObject({ type: 'playMeaning' });
   });
 
   it('goes through both sentences, plays the cue and releases everything', () => {
     for (let i = 0; i < 2; i++) {
       audioEvents.clipEnded(lastId()); // target
-      clock.advance(15000);
+      clock.advance(3000);
       audioEvents.clipEnded(lastId()); // meaning
     }
     expect(applied.at(-1)).toMatchObject({ type: 'playFinishedCue' });
@@ -195,14 +195,14 @@ describe('the loop', () => {
 
   it('pausing freezes the wait; resuming gives a full new wait', () => {
     audioEvents.clipEnded(lastId());
-    clock.advance(10000);
+    clock.advance(2000);
     session.togglePause();
     expect(session.state.paused).toBe(true);
     clock.advance(60000);
     expect(applied.at(-1)).toMatchObject({ type: 'playTarget' });
     session.togglePause();
     expect(session.state.paused).toBe(false);
-    clock.advance(14999);
+    clock.advance(2999);
     expect(applied.at(-1)).toMatchObject({ type: 'playTarget' });
     clock.advance(1);
     expect(applied.at(-1)).toMatchObject({ type: 'playMeaning' });
@@ -234,7 +234,7 @@ describe('the loop', () => {
   it('tells the screen when a timer starts the meaning', () => {
     audioEvents.clipEnded(lastId());
     const before = changes;
-    clock.advance(15000);
+    clock.advance(3000);
     expect(applied.at(-1)).toMatchObject({ type: 'playMeaning' });
     expect(changes).toBeGreaterThan(before);
   });
@@ -268,6 +268,7 @@ describe('applySettings', () => {
     await startRunning();
     session.applySettings(settings);
     audioEvents.clipEnded(lastId());
+    micEvents.speechStart();
     clock.advance(4999);
     expect(applied.at(-1)).toMatchObject({ type: 'playTarget' });
     clock.advance(1);

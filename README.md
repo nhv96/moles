@@ -9,7 +9,7 @@ Status: the prototype works and is concluded (lesson 1 tested on a walk, with Bl
 ## How it works
 
 1. The French sentence plays.
-2. The app listens to the mic and waits for you to repeat it (3 seconds of silence after you speak, or at most 15 seconds).
+2. The app listens to the mic and waits for you to repeat it (the meaning plays after 4 seconds of silence, or after at most 15 seconds of non-stop speech or noise).
 3. The English meaning plays, then the next sentence starts.
 4. After the last sentence, a spoken cue says the lesson is finished.
 

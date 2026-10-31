@@ -20,9 +20,9 @@ function fakeStorage(initial?: string): SettingsStorage & { data?: string } {
 }
 
 describe('defaults', () => {
-  it('match the machine and the detector (3 s, 15 s, 3, 2, 0.003, 100, 400)', () => {
+  it('match the machine and the detector (4 s, 15 s, 3, 2, 0.003, 100, 400)', () => {
     expect(DEFAULT_DEV_SETTINGS).toEqual({
-      silenceMs: 3000,
+      silenceMs: 4000,
       maxWaitMs: 15000,
       startRatio: 3,
       endRatio: 2,
