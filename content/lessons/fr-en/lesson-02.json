@@ -83,6 +83,12 @@
       "speaker": "b",
       "target": "Ça fait trois euros.",
       "meaning": "That is three euros."
+    },
+    {
+      "id": "s09",
+      "speaker": "a",
+      "target": "Merci beaucoup, madame.",
+      "meaning": "Thank you very much, madam."
     }
   ]
 }

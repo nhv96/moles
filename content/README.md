@@ -55,7 +55,7 @@ A lesson is named by its pair and id, for example `fr-en/lesson-01`.
    defines `phrases`:
 
    ```bash
-   uv run scripts/pipeline.py sweep fr-en/lesson-01                      # speeds 0.6 0.7 0.8 0.9 1.0
+   uv run scripts/pipeline.py sweep fr-en/lesson-01                      # speeds 0.8 0.9 1.0
    uv run scripts/pipeline.py sweep fr-en/lesson-01 --speeds 0.8 0.9 1.0 # your own list
    ```
 

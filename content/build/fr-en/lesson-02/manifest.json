@@ -110,6 +110,18 @@
       "meaning_file": "s08_meaning.m4a",
       "target_seconds": 1.35,
       "meaning_seconds": 1.98
+    },
+    {
+      "id": "s09",
+      "speaker": "a",
+      "target": "Merci beaucoup, madame.",
+      "meaning": "Thank you very much, madam.",
+      "speed": 0.9,
+      "mode": "whole",
+      "target_file": "s09_target.m4a",
+      "meaning_file": "s09_meaning.m4a",
+      "target_seconds": 1.54,
+      "meaning_seconds": 2.15
     }
   ],
   "end_cue": {
