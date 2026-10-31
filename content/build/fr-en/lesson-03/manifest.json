@@ -20,11 +20,11 @@
       "speaker": "a",
       "target": "Bienvenue ! Moi, c'est Vinh.",
       "meaning": "Welcome! I'm Vinh.",
-      "speed": 0.87,
+      "speed": 0.95,
       "mode": "phrases",
       "target_file": "s01_target.m4a",
       "meaning_file": "s01_meaning.m4a",
-      "target_seconds": 2.53,
+      "target_seconds": 1.99,
       "meaning_seconds": 2.12
     },
     {
