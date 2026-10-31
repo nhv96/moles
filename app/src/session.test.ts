@@ -41,6 +41,8 @@ let meaningRate: number | undefined;
 let detectorSettings: object | undefined;
 let micOpenError: Error | undefined;
 let changes: number;
+let shownCountdowns: Array<number | undefined>;
+let micOpenGate: Promise<void> | undefined;
 let session: LessonSession;
 
 function lastId(): number {
@@ -58,10 +60,16 @@ const calibration = {
 };
 
 /** Starts the session and lets the mic report its calibration. */
+/** Lets pending promise steps run. */
+async function flush(): Promise<void> {
+  for (let i = 0; i < 5; i++) await Promise.resolve();
+}
+
 async function startRunning(): Promise<void> {
   const started = session.start();
-  await Promise.resolve();
+  await flush();
   micEvents.calibrated(calibration);
+  clock.advance(3000); // the countdown
   await started;
 }
 
@@ -71,6 +79,8 @@ beforeEach(() => {
   applied = [];
   micOpenError = undefined;
   changes = 0;
+  shownCountdowns = [];
+  micOpenGate = undefined;
   const audio: SessionAudio = {
     start: async () => void calls.push('audio.start'),
     apply: (e) => {
@@ -91,6 +101,7 @@ beforeEach(() => {
   const mic: SessionMic = {
     open: async () => {
       calls.push('mic.open');
+      await micOpenGate;
       if (micOpenError) throw micOpenError;
     },
     close: () => void calls.push('mic.close'),
@@ -101,19 +112,67 @@ beforeEach(() => {
     clock,
     createAudio: (events) => ((audioEvents = events), audio),
     createMic: (events) => ((micEvents = events), mic),
-    onChange: () => void changes++,
+    onChange: () => {
+      changes++;
+      shownCountdowns.push(session.state.countdown);
+    },
     log: () => undefined,
     settings: { silenceMs: 3000, maxWaitMs: 15000 },
   });
 });
 
 describe('start', () => {
+  it('starts the countdown only after the mic is open (permission dialog)', async () => {
+    let allow!: () => void;
+    micOpenGate = new Promise((resolve) => (allow = resolve));
+    const started = session.start();
+    micEvents.calibrated(calibration);
+    clock.advance(10000); // the learner is still reading the dialog
+    expect(session.state).toMatchObject({
+      phase: 'starting',
+      countdown: undefined,
+    });
+    allow();
+    await flush();
+    expect(session.state.countdown).toBe(3);
+    clock.advance(3000);
+    await started;
+    expect(session.state.phase).toBe('running');
+  });
+
+  it('waits for the calibration when it takes longer than the countdown', async () => {
+    const started = session.start();
+    await flush();
+    clock.advance(5000);
+    expect(session.state).toMatchObject({ phase: 'starting', countdown: 0 });
+    micEvents.calibrated(calibration);
+    await started;
+    expect(session.state.phase).toBe('running');
+  });
+
+  it('waits for the countdown when the calibration is instant', async () => {
+    const started = session.start();
+    micEvents.calibrated(calibration);
+    await flush();
+    expect(session.state.phase).toBe('starting');
+    clock.advance(3000);
+    await started;
+    expect(session.state.phase).toBe('running');
+  });
+
   it('opens the mic, waits for the calibration, then starts audio and lesson', async () => {
     const started = session.start();
     await Promise.resolve();
     expect(session.state.phase).toBe('starting');
     expect(calls).toEqual(['mic.open']);
     micEvents.calibrated(calibration);
+    await Promise.resolve();
+    expect(session.state.countdown).toBe(3);
+    clock.advance(2000);
+    expect(session.state.countdown).toBe(1);
+    expect(session.state.phase).toBe('starting');
+    expect(calls).toEqual(['mic.open']);
+    clock.advance(1000);
     await started;
     expect(calls).toEqual([
       'mic.open',
@@ -292,6 +351,7 @@ describe('stopping while starting', () => {
     await Promise.resolve();
     session.stop();
     micEvents.calibrated(calibration);
+    clock.advance(3000);
     await started;
     expect(session.state.phase).toBe('finished');
     expect(applied).toEqual([]);

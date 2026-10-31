@@ -5,6 +5,7 @@ import { createBrowserAudio } from './audio/browser';
 import type { BuildIndex } from './audio/index';
 import { type LoadedLesson, loadIndex, loadLesson } from './audio/loader';
 import { MicMonitor } from './mic/mic-monitor';
+import { SharedMic } from './mic/shared-mic';
 import { LessonSession } from './session';
 import {
   type Choice,
@@ -21,6 +22,8 @@ const CHOICE_KEY = 'morning-lesson.choice';
 
 const el = <T extends HTMLElement>(id: string) =>
   document.getElementById(id) as T;
+// One mic for all lessons of this page visit (see mic/shared-mic.ts).
+const sharedMic = new SharedMic((events) => new MicMonitor(events));
 const t0 = Date.now();
 const lines: string[] = [];
 
@@ -67,7 +70,10 @@ function render(): void {
     const item = lesson.manifest.items[state.lesson.index];
     switch (state.phase) {
       case 'starting':
-        status = 'Stay quiet for a moment…';
+        if (state.countdown === undefined)
+          status = 'Waiting for the microphone…';
+        else if (state.countdown > 0) status = `Get ready… ${state.countdown}`;
+        else status = 'Get ready…';
         break;
       case 'running':
         status = describe(state.lesson.phase, state.paused, state.speaking);
@@ -118,7 +124,7 @@ el('start').onclick = () => {
     clock: window,
     createAudio: (events) =>
       createBrowserAudio(loaded.clips, events, loaded.manifest.title),
-    createMic: (events) => new MicMonitor(events),
+    createMic: (events) => sharedMic.attach(events),
     onChange: render,
     log,
   });
