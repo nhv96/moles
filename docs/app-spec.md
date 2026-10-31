@@ -28,6 +28,12 @@ A mobile-friendly app for learning spoken French by *shadowing*: you hear a sent
 5. The next sentence starts.
 6. After the last sentence, a spoken cue says the lesson is finished, then the app stops until you start a lesson again.
 
+### Starting a lesson (Decided 2026-10-31)
+1. The learner taps Start. The screen says "Waiting for the microphone…" until the mic is open (the permission dialog can take any time; the countdown does not run during it).
+2. A 3-second countdown follows on every lesson ("Get ready… 3, 2, 1"). If the mic has to be calibrated, that runs behind the countdown, and the lesson starts when both are done. If the countdown ends first, the screen shows "Get ready…"; if the calibration is slower, the lesson waits for it.
+3. The mic stays open between lessons within one page visit, and the next lesson reuses its noise calibration, so lessons after the first start without reopening the mic. After 3 minutes with no lesson, the mic is closed; the next lesson then opens and calibrates it again, hidden behind the countdown. The reason is the audio ramp, see section 4.
+4. The first sentence plays.
+
 ### Controls
 - **Start:** a button on the screen starts the lesson (Decided). After that, it runs hands-free.
 - **Voice commands in English, "repeat" and "next" (Decided as the goal):**
@@ -58,7 +64,7 @@ Replaying the French after the meaning (revisit after real use), build-up practi
 
 ### Proposed
 - No UI framework to start, since the app has very little UI. Keep the lesson loop as a separate, testable state machine (playing, waiting, meaning, next) apart from the audio and mic code.
-- Measure the background noise at the start of each session and set the speech threshold relative to it. Later, replace the volume threshold with a proper voice activity detector.
+- Measure the background noise when the mic is opened (the first lesson of a page visit, and again after the mic was closed or lost) and set the speech threshold relative to it. Lessons that reuse an open mic reuse the measurement; it is not updated when the surroundings change until the mic is reopened. Later, replace the volume threshold with a proper voice activity detector.
 - Keep a silent audio track playing between sentences, to keep the page alive when the screen is locked. This is untested.
 - Ask for mic permission and set up the mic first, when the user taps start, and only then play audio. A 3-run test supports this (see section 4), but mic-first seems to make playback quieter, which is being tested separately.
 - Add a playback watchdog: if the audio's current time stops advancing while the page says it is playing, detect that and restart playback. The first-run bug showed that events alone can't be trusted to report a silent stall.
@@ -87,6 +93,19 @@ A single test page was used. It beeped every 3 seconds, showed a mic level, requ
 | Beep quality on Bluetooth headphones with the mic active | **Good.** Clear, not loud. (Beeps only; French speech and the meaning voice are untested.) |
 | Beep volume in the mic-first order | **Clearly quieter with the mic's echo cancellation, noise suppression and auto gain on; good with them off** (tested in Safari). Probably iOS voice processing. It may still be slightly quieter than audio-first, but good enough. |
 | First run after granting mic permission | **Bug, reproduced.** With audio started before the mic permission, the beep played once, then nothing. The page received no pause, stalled or ended event, and still reported the audio as playing. With "mic first" ticked, the beeps repeated normally. The two runs also differed in input device (iPhone microphone vs the Bluetooth headset's microphone), and earlier, a plain refresh also made the old order work. Follow-up (3 more runs, all in Opera Touch): the stall reproduced in both fresh runs with the old order, with either microphone, so it is not tied to the input device or to a first-time-only effect. The clip was stuck at its end (3.00s of a 3s loop) while the permission dialog was open, and a watchdog restart fixed it after about 3 seconds. With mic first, no stall occurred. This is the likely cause, but not proven. |
+
+### Volume ramp test (2026-10-31)
+
+iPhone, Bluetooth headphones, mic permission already granted. Symptom: at the start of a lesson, the first sentence's volume rose from zero to full instead of starting at full.
+
+| Question | Result |
+|---|---|
+| Is the app setting the volume? | **No.** The code has no volume, gain or fade handling. The cause is outside the app, most likely iOS and the headphones switching audio route when the mic opens (an interpretation, not proven). |
+| Wait 1 s after the calibration before the first sentence | **No effect.** |
+| Start the silent track at the tap, before the mic opens | **No effect.** This was reverted, because it also brings back the first-run stall (section 5, item 9). |
+| Keep the mic open between lessons and reuse the calibration | **Fixes it for every lesson after the first.** The first lesson of a page visit still ramps, because the mic must be opened once, from a tap. |
+
+Side effects of the fix: the headphones stay in headset mode and the mic indicator stays on while the mic is open (up to 3 minutes after a lesson), and the noise level is not measured again when the learner moves somewhere else. The countdown on every lesson keeps the start looking the same whether the mic was reused or reopened.
 
 ### Speech detection test (2026-10-26)
 
@@ -136,9 +155,10 @@ Page: `headphone-test.html` (branch `test/headphone-buttons`). iPhone, iOS 18.7,
 8. **Apple Developer account.** Not needed for the web app. A native app would need a paid account (about $99/year, to be verified) and cloud builds.
 9. **Silent playback stall.** Playback can get stuck without any event if the mic permission dialog is open when the clip's loop point passes. Mic-first order and a watchdog address it (see section 3).
 10. **Which microphone iOS uses varies.** With the same headphones on, one run used the headset's mic and another the iPhone's built-in mic. The app must work with either and should log which one is active.
-11. **Playback volume** drops if the mic's voice processing is left on (see section 4). Keep it off.
-12. **Generated-voice limits.** Kokoro has one French voice, graded B- by its author. Slowing it stretches every sound equally, so at speeds of 0.8 and below short words dragged and the audio broke up, and at speeds around 0.85 a tiny extra sound ("ehh", "ck") can appear at the start of a clip or phrase. The per-sentence speeds in the lesson file (0.85 to 0.92) were chosen to avoid this; any new sentence needs the same listening check. Whether clips have a tiny extra sound at the end has not been checked.
-13. **Headphone buttons do not work while the mic is open.** Seen in both tests on Bluetooth headphones (section 4); they work with the mic off. The cause is unknown, so the app treats the buttons as a bonus and logs which mic input is active.
+11. **Volume ramp at the first lesson.** After the mic opens, the volume rises from zero at the first lesson of a page visit (section 4, 2026-10-31). Not fixed; later lessons are fine while the mic stays open.
+12. **Playback volume** drops if the mic's voice processing is left on (see section 4). Keep it off.
+13. **Generated-voice limits.** Kokoro has one French voice, graded B- by its author. Slowing it stretches every sound equally, so at speeds of 0.8 and below short words dragged and the audio broke up, and at speeds around 0.85 a tiny extra sound ("ehh", "ck") can appear at the start of a clip or phrase. The per-sentence speeds in the lesson file (0.85 to 0.92) were chosen to avoid this; any new sentence needs the same listening check. Whether clips have a tiny extra sound at the end has not been checked.
+14. **Headphone buttons do not work while the mic is open.** Seen in both tests on Bluetooth headphones (section 4); they work with the mic off. The cause is unknown, so the app treats the buttons as a bonus and logs which mic input is active.
 
 ## 6. Next step
 

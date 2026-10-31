@@ -4,6 +4,9 @@
 //
 // Start order (docs/app-spec.md section 4, "mic first"):
 //   tap -> mic open -> noise calibration (about 2.5 s) -> audio start -> lesson start
+// A countdown of a few seconds runs next to it, for every lesson. When the
+// mic is still open from the last lesson there is no calibration to wait for,
+// and the countdown makes the start feel the same each time.
 
 import type { PlayerEvents } from './audio/player';
 import {
@@ -45,7 +48,11 @@ export interface SessionDeps {
   settings?: Settings;
   /** Longest wait for the first sound level after the mic opens. */
   calibrationTimeoutMs?: number;
+  /** Seconds the learner gets to get ready before the lesson starts. */
+  countdownSeconds?: number;
 }
+
+export const DEFAULT_COUNTDOWN_SECONDS = 3;
 
 export type SessionPhase =
   'idle' | 'starting' | 'running' | 'finished' | 'failed';
@@ -55,6 +62,11 @@ export interface SessionState {
   lesson: LessonState;
   paused: boolean;
   speaking: boolean;
+  /**
+   * Seconds left of the countdown while `starting`; 0 when it is over, and
+   * undefined while it has not begun (the mic is still opening).
+   */
+  countdown: number | undefined;
   error?: string;
 }
 
@@ -66,6 +78,7 @@ export class LessonSession {
   private paused = false;
   private speaking = false;
   private error: string | undefined;
+  private countdown: number | undefined;
   private calibrated: (() => void) | undefined;
 
   constructor(private readonly deps: SessionDeps) {
@@ -112,6 +125,7 @@ export class LessonSession {
       lesson: this.machine.state,
       paused: this.paused,
       speaking: this.speaking,
+      countdown: this.countdown,
       error: this.error,
     };
   }
@@ -123,9 +137,13 @@ export class LessonSession {
     this.deps.onChange();
     try {
       const calibrated = this.waitForCalibration();
-      await this.mic.open();
+      await this.mic.open(); // may wait for the learner to allow the mic
       this.deps.log('mic open: measuring the noise');
-      await calibrated;
+      // The countdown starts only now, so the permission dialog does not use it up.
+      this.countdown = this.deps.countdownSeconds ?? DEFAULT_COUNTDOWN_SECONDS;
+      this.deps.onChange(); // shows the full countdown at once
+      const countdown = this.runCountdown();
+      await Promise.all([calibrated, countdown]);
       await this.audio.start();
       if (this.phase !== 'starting') return; // stopped while starting
       this.phase = 'running';
@@ -170,6 +188,25 @@ export class LessonSession {
   stop(): void {
     if (this.phase === 'finished' || this.phase === 'failed') return;
     this.finish('finished');
+  }
+
+  /** Counts down in whole seconds; ends early (without waiting) if the session stops. */
+  private runCountdown(): Promise<void> {
+    return new Promise((resolve) => {
+      const tick = (): void => {
+        if (this.phase !== 'starting' || !this.countdown) {
+          resolve();
+          return;
+        }
+        this.deps.clock.setTimeout(() => {
+          if (this.phase !== 'starting') return resolve();
+          this.countdown = (this.countdown ?? 1) - 1;
+          this.deps.onChange();
+          tick();
+        }, 1000);
+      };
+      tick();
+    });
   }
 
   private waitForCalibration(): Promise<void> {

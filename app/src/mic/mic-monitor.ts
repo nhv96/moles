@@ -37,6 +37,21 @@ export class MicMonitor {
     return this.stream?.getAudioTracks()[0]?.getSettings().deviceId;
   }
 
+  /** True while the mic is open and measuring, and the noise is calibrated. */
+  get ready(): boolean {
+    const track = this.stream?.getAudioTracks()[0];
+    return (
+      track?.readyState === 'live' &&
+      this.context?.state === 'running' &&
+      this.detector.state.phase === 'listening'
+    );
+  }
+
+  /** The measured background noise, once calibrated. */
+  get calibration(): Calibration | undefined {
+    return this.detector.state.calibration;
+  }
+
   constructor(
     private readonly events: MicEvents,
     settings: DetectorSettings = DEFAULT_DETECTOR_SETTINGS,
