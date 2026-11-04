@@ -12,6 +12,7 @@ const calibration = {
 class FakeMonitor implements SharedMonitor {
   opens = 0;
   ready = false;
+  problem: string | undefined;
   calibration: typeof calibration | undefined;
   settings: object[] = [];
   constructor(readonly events: MicEvents) {}
@@ -114,6 +115,22 @@ describe('SharedMic', () => {
     expect(monitor()).not.toBe(old);
     expect(monitor().opens).toBe(1);
     expect(events.calls).toEqual(['calibrated']);
+  });
+
+  it('says why the old mic was thrown away', async () => {
+    const { shared, monitor } = setup();
+    const first = shared.attach(lessonEvents());
+    await first.open();
+    first.close();
+    monitor().ready = false;
+    monitor().problem = 'track muted';
+    const logs: string[] = [];
+    await shared
+      .attach({ ...lessonEvents(), log: (m) => void logs.push(m) })
+      .open();
+    expect(logs).toEqual([
+      'mic not live any more (track muted): building a new one',
+    ]);
   });
 
   it('keeps the settings when it builds a new mic', async () => {

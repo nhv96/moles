@@ -39,12 +39,26 @@ export class MicMonitor {
 
   /** True while the mic is open and measuring, and the noise is calibrated. */
   get ready(): boolean {
+    return this.problem === undefined;
+  }
+
+  /**
+   * Why the mic cannot be used, or undefined when it is fine. A muted track
+   * counts: iOS mutes it when the screen locks, and it stays muted (sending
+   * silence) after the unlock, while it still looks live.
+   */
+  get problem(): string | undefined {
     const track = this.stream?.getAudioTracks()[0];
-    return (
-      track?.readyState === 'live' &&
-      this.context?.state === 'running' &&
-      this.detector.state.phase === 'listening'
-    );
+    if (!track) return 'no mic stream';
+    if (track.readyState !== 'live') return `track ${track.readyState}`;
+    if (track.muted) return 'track muted';
+    if (this.context?.state !== 'running') {
+      return `audio context ${this.context?.state ?? 'missing'}`;
+    }
+    if (this.detector.state.phase !== 'listening') {
+      return `detector ${this.detector.state.phase}`;
+    }
+    return undefined;
   }
 
   /** The measured background noise, once calibrated. */
