@@ -26,6 +26,8 @@ export interface SharedMonitor {
   close(): void;
   updateSettings(settings: Partial<DetectorSettings>): void;
   readonly ready: boolean;
+  /** Why the mic is not usable, if it is not (for the log). */
+  readonly problem?: string;
   readonly calibration: Calibration | undefined;
 }
 
@@ -62,7 +64,9 @@ export class SharedMic {
           return;
         }
         if (this.opened) {
-          events.log('mic not live any more: building a new one');
+          events.log(
+            `mic not live any more (${monitor.problem ?? 'not ready'}): building a new one`,
+          );
           monitor.close();
           monitor = this.monitor = this.build();
         }
