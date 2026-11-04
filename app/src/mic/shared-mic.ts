@@ -10,7 +10,10 @@
 // all day. The next lesson then opens and calibrates it again.
 //
 // If the mic is no longer live (the stream ended, the audio context was
-// suspended), the next lesson opens and calibrates it again.
+// suspended), the next lesson throws it away and builds a new one (new audio
+// context, new stream) and calibrates it. Reusing the old audio context is
+// not safe: after the screen locks, iOS can leave it broken, and a new
+// stream on it never delivers any sound.
 
 import type { Clock } from '../lesson/machine';
 import type { SessionMic } from '../session';
@@ -30,6 +33,8 @@ export const DEFAULT_IDLE_MS = 3 * 60 * 1000;
 
 export class SharedMic {
   private monitor: SharedMonitor | undefined;
+  private opened = false;
+  private settings: Partial<DetectorSettings> = {};
   private current: MicEvents | undefined;
   private idleTimer: unknown;
 
@@ -43,18 +48,25 @@ export class SharedMic {
   /** The mic for one lesson. Its close() detaches the lesson; the mic stays open. */
   attach(events: MicEvents): SessionMic {
     // Made here, not in open(), so settings applied before open() are kept.
-    const monitor = (this.monitor ??= this.createMonitor(this.route()));
+    this.monitor ??= this.build();
     this.cancelIdle();
     return {
       open: async () => {
         this.current = events;
         this.cancelIdle();
+        let monitor = this.monitor ?? (this.monitor = this.build());
         const calibration = monitor.calibration;
         if (monitor.ready && calibration) {
           events.log('mic still open: reusing the noise calibration');
           events.calibrated(calibration);
           return;
         }
+        if (this.opened) {
+          events.log('mic not live any more: building a new one');
+          monitor.close();
+          monitor = this.monitor = this.build();
+        }
+        this.opened = true;
         await monitor.open();
       },
       close: () => {
@@ -63,12 +75,24 @@ export class SharedMic {
         this.cancelIdle();
         this.idleTimer = this.clock.setTimeout(() => {
           this.idleTimer = undefined;
-          monitor.close();
+          this.monitor?.close();
           events.log('mic closed: no lesson for a while');
         }, this.idleMs);
       },
-      updateSettings: (settings) => monitor.updateSettings(settings),
+      updateSettings: (settings) => {
+        this.settings = { ...this.settings, ...settings };
+        this.monitor?.updateSettings(settings);
+      },
     };
+  }
+
+  private build(): SharedMonitor {
+    const monitor = this.createMonitor(this.route());
+    this.opened = false;
+    if (Object.keys(this.settings).length > 0) {
+      monitor.updateSettings(this.settings);
+    }
+    return monitor;
   }
 
   private cancelIdle(): void {

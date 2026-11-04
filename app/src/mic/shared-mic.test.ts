@@ -68,12 +68,16 @@ const IDLE_MS = 1000;
 function setup() {
   const clock = new FakeClock();
   let monitor!: FakeMonitor;
+  let count = 0;
   const shared = new SharedMic(
-    (events) => (monitor = new FakeMonitor(events)),
+    (events) => {
+      count++;
+      return (monitor = new FakeMonitor(events));
+    },
     clock,
     IDLE_MS,
   );
-  return { shared, clock, monitor: () => monitor };
+  return { shared, clock, monitor: () => monitor, created: () => count };
 }
 
 describe('SharedMic', () => {
@@ -96,14 +100,31 @@ describe('SharedMic', () => {
     expect(events.calls).toEqual(['calibrated']);
   });
 
-  it('opens and calibrates again when the mic is no longer live', async () => {
+  it('builds a new mic when the old one is no longer live', async () => {
+    const { shared, monitor, created } = setup();
+    const first = shared.attach(lessonEvents());
+    await first.open();
+    first.close();
+    const old = monitor();
+    old.ready = false; // for example, the screen was locked
+    const events = lessonEvents();
+    await shared.attach(events).open();
+    expect(created()).toBe(2);
+    expect(old.closed).toBe(1);
+    expect(monitor()).not.toBe(old);
+    expect(monitor().opens).toBe(1);
+    expect(events.calls).toEqual(['calibrated']);
+  });
+
+  it('keeps the settings when it builds a new mic', async () => {
     const { shared, monitor } = setup();
     const first = shared.attach(lessonEvents());
+    first.updateSettings({ startRatio: 4 });
     await first.open();
     first.close();
     monitor().ready = false;
     await shared.attach(lessonEvents()).open();
-    expect(monitor().opens).toBe(2);
+    expect(monitor().settings).toEqual([{ startRatio: 4 }]);
   });
 
   it('sends speech events to the attached lesson only', async () => {
@@ -127,17 +148,20 @@ describe('SharedMic', () => {
     expect(monitor().settings).toEqual([{ startRatio: 4 }]);
   });
 
-  it('closes the mic after the idle time, and the next lesson opens it again', async () => {
+  it('closes the mic after the idle time, and the next lesson opens a new one', async () => {
     const { shared, clock, monitor } = setup();
+    const old0 = () => monitor();
     const first = shared.attach(lessonEvents());
     await first.open();
     first.close();
     clock.advance(IDLE_MS - 1);
     expect(monitor().closed).toBe(0);
     clock.advance(1);
-    expect(monitor().closed).toBe(1);
+    const old = old0();
+    expect(old.closed).toBe(1);
     await shared.attach(lessonEvents()).open();
-    expect(monitor().opens).toBe(2);
+    expect(monitor()).not.toBe(old);
+    expect(monitor().opens).toBe(1);
   });
 
   it('does not close the mic when the next lesson comes in time', async () => {
